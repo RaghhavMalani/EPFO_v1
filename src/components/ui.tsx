@@ -5,7 +5,7 @@ import {
 } from "@phosphor-icons/react/dist/ssr";
 import Link from "next/link";
 import type { ReactNode } from "react";
-import type { IssueStatus } from "@/domain/schemas";
+import type { EmployerRequestStatus, IssueStatus } from "@/domain/schemas";
 import { humanizeState } from "@/lib/format";
 
 type PageHeaderProps = {
@@ -86,9 +86,9 @@ export function buttonClassName(variant: "primary" | "secondary" | "danger" = "p
   return `${shared} bg-[var(--accent-fill)] text-white hover:bg-[var(--accent-strong)]`;
 }
 
-export function StatusBadge({ status }: { status: IssueStatus | "PASS" | "BLOCK" | "WARNING" }) {
-  const isPositive = status === "PASS" || status === "RESOLVED";
-  const isWaiting = status === "WAITING_EXTERNAL";
+export function StatusBadge({ status }: { status: IssueStatus | EmployerRequestStatus | "PASS" | "BLOCK" | "WARNING" }) {
+  const isPositive = status === "PASS" || status === "RESOLVED" || status === "APPROVED";
+  const isWaiting = status === "WAITING_EXTERNAL" || status === "AWAITING_REVIEW" || status === "IN_REVIEW";
   const Icon = isPositive ? CheckCircleIcon : isWaiting ? ClockIcon : WarningCircleIcon;
   return (
     <span

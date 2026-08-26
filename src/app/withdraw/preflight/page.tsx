@@ -98,9 +98,9 @@ export default function PreflightPage() {
             {snapshot.readiness.percentage}%
           </p>
           <p className="mt-5 text-sm leading-6 text-white/80">
-            {snapshot.readiness.attentionCount === 0
+            {snapshot.readiness.passedCount} of {snapshot.readiness.totalChecks} checks passed. {snapshot.readiness.attentionCount === 0
               ? "No items need attention."
-              : `${snapshot.readiness.attentionCount} ${snapshot.readiness.attentionCount === 1 ? "thing needs" : "things need"} attention.`}
+              : `${snapshot.readiness.attentionCount} ${snapshot.readiness.attentionCount === 1 ? "check needs" : "checks need"} action.`}
           </p>
         </div>
         <div className="rounded-2xl border border-[var(--line)] bg-[var(--surface)] p-6 sm:p-7">
@@ -109,7 +109,7 @@ export default function PreflightPage() {
             <div>
               <h2 className="font-semibold">A score you can explain</h2>
               <p className="mt-2 text-sm leading-6 text-[var(--muted)]">
-                Readiness is calculated from seven deterministic checks. It changes only when the underlying synthetic records change.
+                Readiness is the raw pass count: passed checks divided by seven. There are no hidden weights. 5 of 7 is 71%, 6 of 7 is 86%, and 7 of 7 is 100%.
               </p>
             </div>
           </div>
@@ -130,7 +130,7 @@ export default function PreflightPage() {
           <CheckCircleIcon size={30} weight="fill" className="text-[var(--success)]" aria-hidden="true" />
           <h2 className="mt-4 text-2xl font-semibold tracking-[-0.025em]">All preflight checks passed</h2>
           <p className="mt-2 max-w-xl leading-7 text-[var(--muted)]">
-            The synthetic employment records, identity checks, bank destination, and requested amount are ready.
+            The synthetic identity, Aadhaar, PAN, mobile, bank, Date of Exit, and legacy record checks are ready.
           </p>
           <div className="mt-6">
             <LinkButton href="/withdraw/review">

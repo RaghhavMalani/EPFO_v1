@@ -5,6 +5,7 @@ export const TransferStatusSchema = z.enum(["NOT_TRANSFERRED", "TRANSFERRED"]);
 
 export const EmploymentRecordSchema = z.object({
   id: z.string(),
+  memberRecordLabel: z.string(),
   employerName: z.string(),
   employmentStart: z.string(),
   employmentEnd: z.string().nullable(),
@@ -15,29 +16,41 @@ export const EmploymentRecordSchema = z.object({
   pfBalancePaise: z.number().int().nonnegative(),
   transferredAmountPaise: z.number().int().nonnegative(),
   transferStatus: TransferStatusSchema,
+  legacyRecordStatus: z.enum(["ALIGNED", "REVIEW_REQUIRED"]),
+  serviceEndReason: z.enum(["RESIGNATION", "RETIREMENT"]).nullable(),
 });
 
 export const MemberSchema = z.object({
   id: z.string(),
   name: z.string(),
+  uanMasked: z.string(),
   currentPfBalancePaise: z.number().int().positive(),
   requestedWithdrawalPaise: z.number().int().positive(),
+  employmentStatus: z.literal("NOT_EMPLOYED_IN_PF_ESTABLISHMENT"),
   identity: z.object({
+    identityStatus: VerificationStatusSchema,
     aadhaarStatus: VerificationStatusSchema,
     panStatus: VerificationStatusSchema,
     bankStatus: VerificationStatusSchema,
+    mobileStatus: VerificationStatusSchema,
+  }),
+  policy: z.object({
+    daysSinceLastExit: z.number().int().nonnegative(),
+    markExitWaitingPeriodDays: z.number().int().positive(),
+    uanAadhaarValidated: z.boolean(),
+    uanIssuedBeforeProfileCutoff: z.boolean(),
   }),
   employments: z.array(EmploymentRecordSchema).min(1),
 });
 
 export const PreflightCheckIdSchema = z.enum([
   "IDENTITY_VERIFIED",
+  "AADHAAR_LINKED",
   "PAN_VERIFIED",
+  "MOBILE_VERIFIED",
   "BANK_VERIFIED",
-  "WITHDRAWAL_ELIGIBILITY",
-  "PREVIOUS_EMPLOYMENT_EXIT_RECORDED",
-  "OLD_BALANCE_TRANSFERRED",
-  "REQUIRED_INFORMATION_COMPLETE",
+  "EXIT_DATE_RECORDED",
+  "LEGACY_RECORD_ALIGNED",
 ]);
 
 export const PreflightCheckSchema = z.object({
@@ -51,12 +64,26 @@ export const PreflightCheckSchema = z.object({
   issueId: z.string().optional(),
 });
 
+export const ResolutionTypeSchema = z.enum([
+  "SELF_SERVICE",
+  "EMPLOYER_ACTION",
+  "EPFO_ACTION",
+  "AUTO_RESOLUTION",
+]);
+
 export const IssueStatusSchema = z.enum([
   "OPEN",
   "ACTION_REQUIRED",
   "WAITING_EXTERNAL",
   "RESOLVED",
   "ESCALATED",
+]);
+
+export const IssueTypeSchema = z.enum([
+  "MISSING_EXIT_DATE",
+  "LEGACY_EMPLOYMENT_EXCEPTION",
+  "BANK_NOT_READY",
+  "PROFILE_CORRECTION",
 ]);
 
 export const IssueEventSchema = z.object({
@@ -69,7 +96,8 @@ export const IssueEventSchema = z.object({
 
 export const IssueSchema = z.object({
   id: z.string(),
-  type: z.enum(["MISSING_EXIT_DATE", "OLD_BALANCE_NOT_TRANSFERRED"]),
+  type: IssueTypeSchema,
+  relatedEmploymentId: z.string().nullable(),
   title: z.string(),
   description: z.string(),
   whyItMatters: z.string(),
@@ -80,6 +108,48 @@ export const IssueSchema = z.object({
   updatedAt: z.string(),
   expectedBy: z.string(),
   events: z.array(IssueEventSchema),
+});
+
+export const EmployerRequestStatusSchema = z.enum([
+  "AWAITING_REVIEW",
+  "IN_REVIEW",
+  "INFORMATION_REQUESTED",
+  "APPROVED",
+  "REJECTED",
+]);
+
+export const EmployerRequestEventSchema = z.object({
+  id: z.string(),
+  timestamp: z.string(),
+  status: EmployerRequestStatusSchema,
+  actorName: z.string(),
+  note: z.string(),
+});
+
+export const EmployerRequestSchema = z.object({
+  id: z.string(),
+  issueId: z.string().nullable(),
+  memberId: z.string(),
+  memberName: z.string(),
+  requestType: z.enum(["LEGACY_RECORD_CORRECTION", "EMPLOYMENT_RECORD_CORRECTION"]),
+  title: z.string(),
+  currentRecord: z.record(z.string(), z.string()),
+  proposedRecord: z.record(z.string(), z.string()),
+  whyItMatters: z.string(),
+  relatedJourney: z.string(),
+  submittedAt: z.string(),
+  updatedAt: z.string(),
+  status: EmployerRequestStatusSchema,
+  supportingContext: z.array(z.string()),
+  reason: z.string().nullable(),
+  events: z.array(EmployerRequestEventSchema),
+});
+
+export const EmployerSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  establishmentIdMasked: z.string(),
+  pfOffice: z.string(),
 });
 
 export const ClaimStateSchema = z.enum([
@@ -105,6 +175,8 @@ export const ClaimSchema = z.object({
   id: z.string(),
   memberId: z.string(),
   requestedAmountPaise: z.number().int().positive(),
+  serviceType: z.literal("FINAL_PF_SETTLEMENT"),
+  formReference: z.literal("FORM_19"),
   state: ClaimStateSchema,
   createdAt: z.string(),
   updatedAt: z.string(),
@@ -120,7 +192,14 @@ export const AuditMetadataValueSchema = z.union([
 
 export const AuditEventSchema = z.object({
   id: z.string(),
-  aggregateType: z.enum(["MEMBER", "ISSUE", "EMPLOYMENT_RECORD", "CLAIM", "PAYMENT"]),
+  aggregateType: z.enum([
+    "MEMBER",
+    "ISSUE",
+    "EMPLOYMENT_RECORD",
+    "EMPLOYER_REQUEST",
+    "CLAIM",
+    "PAYMENT",
+  ]),
   aggregateId: z.string(),
   eventType: z.string(),
   timestamp: z.string(),
@@ -131,7 +210,9 @@ export const AuditEventSchema = z.object({
 
 export const AppStateSchema = z.object({
   member: MemberSchema,
+  employer: EmployerSchema,
   issues: z.array(IssueSchema),
+  employerRequests: z.array(EmployerRequestSchema),
   claim: ClaimSchema,
   auditEvents: z.array(AuditEventSchema),
 });
@@ -140,8 +221,12 @@ export type EmploymentRecord = z.infer<typeof EmploymentRecordSchema>;
 export type Member = z.infer<typeof MemberSchema>;
 export type PreflightCheckId = z.infer<typeof PreflightCheckIdSchema>;
 export type PreflightCheck = z.infer<typeof PreflightCheckSchema>;
+export type ResolutionType = z.infer<typeof ResolutionTypeSchema>;
 export type IssueStatus = z.infer<typeof IssueStatusSchema>;
+export type IssueType = z.infer<typeof IssueTypeSchema>;
 export type Issue = z.infer<typeof IssueSchema>;
+export type EmployerRequestStatus = z.infer<typeof EmployerRequestStatusSchema>;
+export type EmployerRequest = z.infer<typeof EmployerRequestSchema>;
 export type ClaimState = z.infer<typeof ClaimStateSchema>;
 export type Claim = z.infer<typeof ClaimSchema>;
 export type ActorType = z.infer<typeof ClaimStateEntrySchema>["actorType"];

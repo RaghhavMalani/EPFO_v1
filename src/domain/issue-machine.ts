@@ -3,10 +3,10 @@ import type { ActorType, AuditEvent, Issue, IssueStatus } from "@/domain/schemas
 
 const ISSUE_TRANSITIONS: Record<IssueStatus, IssueStatus[]> = {
   OPEN: ["ACTION_REQUIRED"],
-  ACTION_REQUIRED: ["WAITING_EXTERNAL"],
-  WAITING_EXTERNAL: ["RESOLVED", "ESCALATED"],
+  ACTION_REQUIRED: ["WAITING_EXTERNAL", "RESOLVED"],
+  WAITING_EXTERNAL: ["ACTION_REQUIRED", "RESOLVED", "ESCALATED"],
   RESOLVED: [],
-  ESCALATED: ["WAITING_EXTERNAL"],
+  ESCALATED: ["ACTION_REQUIRED", "WAITING_EXTERNAL"],
 };
 
 type IssueTransitionInput = {

@@ -7,7 +7,7 @@ import {
 import Link from "next/link";
 import { epfoService } from "@/application/service-instance";
 import { ActionButton } from "@/components/action-button";
-import { PageHeader, StatusBadge } from "@/components/ui";
+import { LinkButton, PageHeader } from "@/components/ui";
 import { CLAIM_SEQUENCE } from "@/domain/claim-machine";
 import type { ClaimState } from "@/domain/schemas";
 import { formatDateTime, humanizeState } from "@/lib/format";
@@ -37,8 +37,6 @@ const claimControls: Array<{
 
 export default function DemoPage() {
   const snapshot = epfoService.getSnapshot();
-  const exitIssue = snapshot.issues.find((issue) => issue.id === "issue-exit-date");
-  const balanceIssue = snapshot.issues.find((issue) => issue.id === "issue-old-balance");
   const claimIndex = CLAIM_SEQUENCE.indexOf(snapshot.claim.state);
 
   return (
@@ -46,7 +44,7 @@ export default function DemoPage() {
       <PageHeader
         eyebrow="Internal simulation"
         title="Demo control panel"
-        description="A simulation and debug control surface for triggering synthetic employer, processing, and bank events."
+        description="A simulation and debug control surface for resetting state and advancing synthetic claim and bank events."
         aside={
           <span className="inline-flex items-center gap-2 rounded-xl bg-[var(--warning-soft)] px-3 py-2 text-sm font-semibold text-[var(--warning)]">
             <BugIcon size={18} weight="fill" aria-hidden="true" />
@@ -82,41 +80,13 @@ export default function DemoPage() {
 
       <div className="grid gap-8 lg:grid-cols-2">
         <section className="rounded-2xl border border-[var(--line)] bg-[var(--surface)] p-6">
-          <h2 className="text-xl font-semibold">Resolve preflight issues</h2>
+          <h2 className="text-xl font-semibold">Use the role workflows</h2>
           <p className="mt-2 text-sm leading-6 text-[var(--muted)]">
-            Each action updates the issue and its related employment record through a mock adapter.
+            Readiness changes only through the actual prototype screens, so the demo stays coherent across both roles.
           </p>
-          <div className="mt-6 space-y-5">
-            <div className="border-b border-[var(--line)] pb-5">
-              <div className="flex flex-wrap items-center justify-between gap-3">
-                <p className="font-semibold">Date of Exit correction</p>
-                {exitIssue ? <StatusBadge status={exitIssue.status} /> : null}
-              </div>
-              <ActionButton
-                endpoint="/api/demo"
-                body={{ action: "RESOLVE_EXIT" }}
-                disabled={exitIssue?.status === "RESOLVED"}
-                variant="secondary"
-                className="mt-4"
-              >
-                Simulate employer accepting Date of Exit correction
-              </ActionButton>
-            </div>
-            <div>
-              <div className="flex flex-wrap items-center justify-between gap-3">
-                <p className="font-semibold">Old PF balance</p>
-                {balanceIssue ? <StatusBadge status={balanceIssue.status} /> : null}
-              </div>
-              <ActionButton
-                endpoint="/api/demo"
-                body={{ action: "RECONCILE_BALANCE" }}
-                disabled={balanceIssue?.status === "RESOLVED"}
-                variant="secondary"
-                className="mt-4"
-              >
-                Simulate old PF balance reconciliation
-              </ActionButton>
-            </div>
+          <div className="mt-6 flex flex-wrap gap-3">
+            <LinkButton href="/manage/mark-exit">Member Mark Exit</LinkButton>
+            <LinkButton href="/employer/requests" variant="secondary">Employer requests</LinkButton>
           </div>
         </section>
 

@@ -23,15 +23,16 @@ export default function ReviewPage() {
   return (
     <div className="mx-auto max-w-4xl px-4 py-10 sm:px-6 sm:py-14">
       <PageHeader
-        title="Review your mock claim"
-        description="Check the amount and destination before explicitly confirming this synthetic submission."
+        eyebrow="Final PF settlement · Form 19"
+        title="Review your synthetic claim"
+        description="Check the full-settlement amount and destination before explicitly confirming this synthetic submission."
         backHref="/withdraw/preflight"
         backLabel="Claim Preflight"
       />
 
       <section className="mt-9 overflow-hidden rounded-2xl border border-[var(--line)] bg-[var(--surface)]">
         <div className="border-b border-[var(--line)] p-6 sm:p-8">
-          <p className="text-sm font-medium text-[var(--muted)]">PF withdrawal amount</p>
+          <p className="text-sm font-medium text-[var(--muted)]">Final PF settlement amount</p>
           <p className="mt-2 text-4xl font-semibold tracking-[-0.04em] sm:text-5xl">
             {formatCurrency(snapshot.claim.requestedAmountPaise)}
           </p>
@@ -77,7 +78,7 @@ export default function ReviewPage() {
         showArrow
         className="mt-7"
       >
-        Confirm and submit mock claim
+        Confirm and submit synthetic claim
       </ActionButton>
 
       <div className="mt-9">

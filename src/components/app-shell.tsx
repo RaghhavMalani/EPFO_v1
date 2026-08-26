@@ -2,16 +2,17 @@ import Link from "next/link";
 
 const navigation = [
   { href: "/", label: "Home" },
-  { href: "/member", label: "My PF" },
-  { href: "/claims/claim-demo-001", label: "Track claim" },
-  { href: "/demo", label: "Demo controls" },
+  { href: "/member", label: "View" },
+  { href: "/manage", label: "Manage" },
+  { href: "/online-services", label: "Online Services" },
+  { href: "/employer", label: "Employer workspace" },
 ];
 
 export function AppHeader() {
   return (
     <>
       <div className="border-b border-[var(--line)] bg-[var(--safety)] px-4 py-2 text-center text-xs font-medium text-[var(--muted)]">
-        Independent prototype · Synthetic data
+        Independent hackathon prototype · Synthetic data only
       </div>
       <header className="sticky top-0 z-20 border-b border-[var(--line)] bg-[color:var(--canvas)/0.94] backdrop-blur-md">
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-5 px-4 sm:px-6">
@@ -53,7 +54,7 @@ export function AppFooter() {
           <p className="mt-1">Know before you claim. Fix before you fail. Track until you&apos;re paid.</p>
         </div>
         <p className="max-w-md md:text-right">
-          Independent hackathon prototype. No government, bank, Aadhaar, PAN, employer, or OTP systems are connected.
+          Independent hackathon prototype · Synthetic data only. No government, bank, Aadhaar, PAN, employer, or OTP systems are connected.
         </p>
       </div>
     </footer>
