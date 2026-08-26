@@ -12,7 +12,7 @@ export const CLAIM_STEP_CONTENT: Record<ClaimState, ClaimStepContent> = {
   DRAFT: {
     label: "Claim preparation",
     responsibleParty: "Aarav Sharma",
-    happening: "Your synthetic withdrawal request is being prepared.",
+    happening: "Your synthetic final PF settlement request is being prepared.",
     citizenAction: "Resolve the items found in Claim Preflight.",
     next: "The claim becomes ready after every blocking check passes.",
   },
@@ -33,7 +33,7 @@ export const CLAIM_STEP_CONTENT: Record<ClaimState, ClaimStepContent> = {
   ELIGIBILITY_VERIFIED: {
     label: "Eligibility verified",
     responsibleParty: "EPFO Processing · Simulation",
-    happening: "The deterministic withdrawal rules have passed for this synthetic claim.",
+    happening: "The deterministic final-settlement rules have passed for this synthetic claim.",
     citizenAction: "Nothing required.",
     next: "Your employment records will be verified.",
   },
@@ -54,7 +54,7 @@ export const CLAIM_STEP_CONTENT: Record<ClaimState, ClaimStepContent> = {
   PAYMENT_INSTRUCTION_CREATED: {
     label: "Payment instruction created",
     responsibleParty: "EPFO Payments · Simulation",
-    happening: "A mock instruction for ₹80,000 has been created for the verified destination.",
+    happening: "A mock instruction for ₹3,20,400 has been created for the verified destination.",
     citizenAction: "Nothing required.",
     next: "The instruction will be sent to the simulated bank.",
   },
@@ -68,7 +68,7 @@ export const CLAIM_STEP_CONTENT: Record<ClaimState, ClaimStepContent> = {
   CREDITED: {
     label: "Payment credited",
     responsibleParty: "Demo Bank · Simulation",
-    happening: "₹80,000 has been credited to the synthetic verified destination.",
+    happening: "₹3,20,400 has been credited to the synthetic verified destination.",
     citizenAction: "No action required. This demo journey is complete.",
     next: "No further processing steps remain.",
   },

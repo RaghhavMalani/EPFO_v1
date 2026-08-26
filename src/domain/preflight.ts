@@ -1,30 +1,32 @@
 import type { Member, PreflightCheck } from "@/domain/schemas";
 
 const EXIT_ISSUE_ID = "issue-exit-date";
-const TRANSFER_ISSUE_ID = "issue-old-balance";
+const LEGACY_ISSUE_ID = "issue-legacy-record";
 
 export function runPreflight(member: Member): PreflightCheck[] {
-  const previousEmployments = member.employments.filter((record) => !record.isCurrent);
-  const exitDatesRecorded = previousEmployments.every(
-    (record) => record.exitStatus === "VERIFIED" && record.pfRecordExitDate !== null,
+  const exitRecorded = member.employments.every(
+    (record) => record.isCurrent || (record.exitStatus === "VERIFIED" && record.pfRecordExitDate),
   );
-  const oldBalancesTransferred = previousEmployments.every(
-    (record) => record.transferStatus === "TRANSFERRED" || record.pfBalancePaise === 0,
+  const legacyRecordsAligned = member.employments.every(
+    (record) => record.legacyRecordStatus === "ALIGNED",
   );
-  const eligible =
-    member.requestedWithdrawalPaise > 0 &&
-    member.requestedWithdrawalPaise <= member.currentPfBalancePaise;
-  const hasRequiredInformation =
-    member.name.trim().length > 0 &&
-    member.employments.some((record) => record.isCurrent && record.pfRecordStatus === "ACTIVE");
 
   return [
     {
       id: "IDENTITY_VERIFIED",
       label: "Identity verified",
+      status: member.identity.identityStatus === "VERIFIED" ? "PASS" : "BLOCK",
+      reason: "The synthetic member identity is verified.",
+      userExplanation: "Your core identity details match this synthetic UAN profile.",
+      responsibleParty: "EPFO One checks",
+      recommendedAction: "No action needed.",
+    },
+    {
+      id: "AADHAAR_LINKED",
+      label: "Aadhaar linked",
       status: member.identity.aadhaarStatus === "VERIFIED" ? "PASS" : "BLOCK",
-      reason: "The synthetic identity record is verified.",
-      userExplanation: "Your identity details match this synthetic PF profile.",
+      reason: "The masked synthetic Aadhaar status is verified.",
+      userExplanation: "Your synthetic UAN is linked to a verified identity record.",
       responsibleParty: "EPFO One checks",
       recommendedAction: "No action needed.",
     },
@@ -32,79 +34,60 @@ export function runPreflight(member: Member): PreflightCheck[] {
       id: "PAN_VERIFIED",
       label: "PAN verified",
       status: member.identity.panStatus === "VERIFIED" ? "PASS" : "BLOCK",
-      reason: "The synthetic PAN record is verified.",
+      reason: "The synthetic PAN status is verified.",
       userExplanation: "Your tax identity check is complete for this prototype.",
       responsibleParty: "EPFO One checks",
       recommendedAction: "No action needed.",
     },
     {
-      id: "BANK_VERIFIED",
-      label: "Bank details verified",
-      status: member.identity.bankStatus === "VERIFIED" ? "PASS" : "BLOCK",
-      reason: "The synthetic bank destination is verified.",
-      userExplanation: "A verified mock destination is ready to receive payment.",
+      id: "MOBILE_VERIFIED",
+      label: "Mobile verified",
+      status: member.identity.mobileStatus === "VERIFIED" ? "PASS" : "BLOCK",
+      reason: "The masked synthetic mobile status is verified.",
+      userExplanation: "A verified synthetic mobile is available for member self-service checks.",
       responsibleParty: "EPFO One checks",
       recommendedAction: "No action needed.",
     },
     {
-      id: "WITHDRAWAL_ELIGIBILITY",
-      label: "Withdrawal amount eligible",
-      status: eligible ? "PASS" : "BLOCK",
-      reason: eligible
-        ? "The requested amount is within the synthetic available balance."
-        : "The requested amount exceeds the synthetic available balance.",
-      userExplanation: eligible
-        ? "Your requested amount can proceed to record checks."
-        : "Choose an amount within the available synthetic balance.",
-      responsibleParty: "EPFO One rules engine",
-      recommendedAction: eligible ? "No action needed." : "Change the withdrawal amount.",
+      id: "BANK_VERIFIED",
+      label: "Bank verified",
+      status: member.identity.bankStatus === "VERIFIED" ? "PASS" : "BLOCK",
+      reason: "Bank and NPCI verification is complete in the synthetic record.",
+      userExplanation: "The payment destination is ready without an employer approval step.",
+      responsibleParty: "Bank / NPCI verification · Simulation",
+      recommendedAction: "No action needed.",
     },
     {
-      id: "PREVIOUS_EMPLOYMENT_EXIT_RECORDED",
-      label: "Previous employment is closed",
-      status: exitDatesRecorded ? "PASS" : "BLOCK",
-      reason: exitDatesRecorded
-        ? "Every previous employment record has a verified Date of Exit."
+      id: "EXIT_DATE_RECORDED",
+      label: "Date of Exit recorded",
+      status: exitRecorded ? "PASS" : "BLOCK",
+      reason: exitRecorded
+        ? "Every previous employment record has a Date of Exit."
         : "Demo Systems Pvt Ltd has no Date of Exit in the synthetic PF record.",
-      userExplanation: exitDatesRecorded
-        ? "Your previous employment records are formally closed."
-        : "The older employment still appears open in the PF record, so this claim cannot move forward yet.",
-      responsibleParty: exitDatesRecorded ? "EPFO One checks" : "Demo Systems Pvt Ltd",
-      recommendedAction: exitDatesRecorded
-        ? "No action needed."
-        : "Ask the previous employer to confirm your Date of Exit.",
-      ...(exitDatesRecorded ? {} : { issueId: EXIT_ISSUE_ID }),
+      userExplanation: exitRecorded
+        ? "Your last employment record is formally closed."
+        : "You left more than 60 days ago and can now mark this date yourself in the synthetic flow.",
+      responsibleParty: exitRecorded ? "EPFO One checks" : "Aarav Sharma",
+      recommendedAction: exitRecorded ? "No action needed." : "Use Manage to mark your Date of Exit.",
+      ...(exitRecorded ? {} : { issueId: EXIT_ISSUE_ID }),
     },
     {
-      id: "OLD_BALANCE_TRANSFERRED",
-      label: "Old PF balance reconciled",
-      status: oldBalancesTransferred ? "PASS" : "BLOCK",
-      reason: oldBalancesTransferred
-        ? "No balance remains stranded in an older employment record."
-        : "₹42,600 remains in the Demo Systems Pvt Ltd employment record.",
-      userExplanation: oldBalancesTransferred
-        ? "Your employment balances are aligned for this withdrawal journey."
-        : "Part of your PF is still attached to an older job and needs a synthetic transfer reconciliation.",
-      responsibleParty: oldBalancesTransferred
+      id: "LEGACY_RECORD_ALIGNED",
+      label: "Legacy employment record aligned",
+      status: legacyRecordsAligned ? "PASS" : "BLOCK",
+      reason: legacyRecordsAligned
+        ? "Every synthetic member record is aligned under this UAN."
+        : "A legacy service-end detail needs employer review in this demo scenario.",
+      userExplanation: legacyRecordsAligned
+        ? "Your employment records are ready for final settlement."
+        : "This exception cannot be self-approved. Demo Systems must review the proposed correction.",
+      responsibleParty: legacyRecordsAligned
         ? "EPFO One checks"
-        : "EPFO Processing · Simulation",
-      recommendedAction: oldBalancesTransferred
+        : "Demo Systems Pvt Ltd",
+      recommendedAction: legacyRecordsAligned
         ? "No action needed."
-        : "Start a synthetic transfer reconciliation.",
-      ...(oldBalancesTransferred ? {} : { issueId: TRANSFER_ISSUE_ID }),
-    },
-    {
-      id: "REQUIRED_INFORMATION_COMPLETE",
-      label: "Required information complete",
-      status: hasRequiredInformation ? "PASS" : "BLOCK",
-      reason: hasRequiredInformation
-        ? "The synthetic member and active employment details are complete."
-        : "Required synthetic member information is incomplete.",
-      userExplanation: hasRequiredInformation
-        ? "We have the information needed to prepare the claim."
-        : "Complete the missing profile information before continuing.",
-      responsibleParty: "Aarav Sharma",
-      recommendedAction: hasRequiredInformation ? "No action needed." : "Complete the profile.",
+        : "Create a synthetic employer review request.",
+      ...(legacyRecordsAligned ? {} : { issueId: LEGACY_ISSUE_ID }),
     },
   ];
 }

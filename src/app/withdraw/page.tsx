@@ -11,28 +11,30 @@ import { formatCurrency } from "@/lib/format";
 export const metadata = { title: "Withdraw PF" };
 
 export default function WithdrawPage() {
-  const { member } = epfoService.getSnapshot();
+  const { member, withdrawalService } = epfoService.getSnapshot();
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-10 sm:px-6 sm:py-14">
       <PageHeader
-        title="Withdraw from your PF"
-        description="First, we will check the synthetic account for anything that could stop or delay this claim."
-        backHref="/"
-        backLabel="Choose another goal"
+        eyebrow="Online Services"
+        title="Final PF settlement"
+        description="You are not currently employed in a PF-covered establishment. Check the account before starting this synthetic final-settlement journey."
+        backHref="/online-services"
+        backLabel="Online Services"
       />
 
       <div className="grid gap-8 py-10 lg:grid-cols-[1fr_0.72fr]">
         <section className="rounded-2xl border border-[var(--line)] bg-[var(--surface)] p-6 sm:p-8">
-          <p className="text-sm font-medium text-[var(--muted)]">Requested withdrawal</p>
+          <p className="text-sm font-medium text-[var(--muted)]">Full available PF balance</p>
           <p className="mt-2 text-4xl font-semibold tracking-[-0.04em]">
             {formatCurrency(member.requestedWithdrawalPaise)}
           </p>
           <div className="mt-6 rounded-xl bg-[var(--surface-muted)] p-4 text-sm leading-6">
             <p className="font-semibold">Available synthetic balance</p>
             <p className="mt-1 text-[var(--muted)]">
-              {formatCurrency(member.currentPfBalancePaise)} across this demo profile.
+              {formatCurrency(member.currentPfBalancePaise)} under {member.uanMasked}.
             </p>
+            <p className="mt-2 text-xs font-semibold text-[var(--accent)]">Internal service mapping: Final PF settlement · Form 19</p>
           </div>
           <ActionButton
             endpoint="/api/actions/preflight"
@@ -41,10 +43,10 @@ export default function WithdrawPage() {
             showArrow
             className="mt-7"
           >
-            Check my claim
+            Run seven readiness checks
           </ActionButton>
           <p className="mt-4 text-xs leading-5 text-[var(--muted)]">
-            This runs deterministic prototype rules. AI does not decide eligibility or amounts.
+            {withdrawalService.explanation} AI does not decide eligibility or amounts.
           </p>
         </section>
 

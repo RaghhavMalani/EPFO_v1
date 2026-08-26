@@ -1,30 +1,35 @@
+import {
+  EmployerWorkflowAdapter,
+  type EmployerDecision,
+} from "@/adapters/employer-workflow-adapter";
+import { MemberSelfServiceAdapter } from "@/adapters/member-self-service-adapter";
 import { MockClaimProcessorAdapter } from "@/adapters/mock-claim-processor-adapter";
-import { MockEmployerAdapter } from "@/adapters/mock-employer-adapter";
-import { MockTransferAdapter } from "@/adapters/mock-transfer-adapter";
 import { createAuditEvent, type AuditContext } from "@/domain/audit";
 import { transitionClaim } from "@/domain/claim-machine";
-import { transitionIssue } from "@/domain/issue-machine";
 import { hasBlockingChecks, runPreflight } from "@/domain/preflight";
 import { calculateReadiness, type ReadinessResult } from "@/domain/readiness";
-import type {
-  AppState,
-  ClaimState,
-  Issue,
-  PreflightCheck,
-} from "@/domain/schemas";
+import {
+  routeResolution,
+  type ResolutionRoute,
+} from "@/domain/resolution-router";
+import type { AppState, ClaimState, PreflightCheck } from "@/domain/schemas";
+import {
+  determineWithdrawalService,
+  type WithdrawalServiceDecision,
+} from "@/domain/withdrawal-service";
 import type { EpfoRepository } from "@/repositories/epfo-repository";
 
 export type ApplicationSnapshot = AppState & {
   preflight: PreflightCheck[];
   readiness: ReadinessResult;
+  issueResolutions: ResolutionRoute[];
+  withdrawalService: WithdrawalServiceDecision;
 };
-
-export type IssueAction = "START" | "SUBMIT" | "SIMULATE_RESOLUTION";
 
 export class EpfoApplicationService {
   private readonly context: AuditContext;
-  private readonly employerAdapter = new MockEmployerAdapter();
-  private readonly transferAdapter = new MockTransferAdapter();
+  private readonly selfServiceAdapter = new MemberSelfServiceAdapter();
+  private readonly employerAdapter = new EmployerWorkflowAdapter();
   private readonly claimAdapter = new MockClaimProcessorAdapter();
 
   constructor(
@@ -42,12 +47,15 @@ export class EpfoApplicationService {
       ...state,
       preflight,
       readiness: calculateReadiness(preflight),
+      issueResolutions: state.issues.map((issue) => routeResolution(issue, state.member)),
+      withdrawalService: determineWithdrawalService(state.member),
     };
   }
 
   completePreflight(): ApplicationSnapshot {
     const state = this.repository.getState();
     const checks = runPreflight(state.member);
+    const readiness = calculateReadiness(checks);
     state.auditEvents.push(
       createAuditEvent(
         {
@@ -57,8 +65,9 @@ export class EpfoApplicationService {
           actorType: "SYSTEM",
           actorName: "Claim Preflight",
           metadata: {
-            readiness: calculateReadiness(checks).percentage,
-            blockers: checks.filter((check) => check.status === "BLOCK").length,
+            passedCount: readiness.passedCount,
+            totalChecks: readiness.totalChecks,
+            readiness: readiness.percentage,
           },
         },
         this.context,
@@ -68,23 +77,64 @@ export class EpfoApplicationService {
     return this.getSnapshot();
   }
 
-  actOnIssue(issueId: string, action: IssueAction): ApplicationSnapshot {
-    let state = this.repository.getState();
-    const issue = state.issues.find((candidate) => candidate.id === issueId);
-    if (!issue) {
-      throw new Error("The requested issue was not found.");
-    }
+  startMarkExit(issueId: string): ApplicationSnapshot {
+    const state = this.selfServiceAdapter.startMarkExit(
+      this.repository.getState(),
+      issueId,
+      this.context,
+    );
+    this.repository.saveState(state);
+    return this.getSnapshot();
+  }
 
-    if (action === "SIMULATE_RESOLUTION") {
-      state =
-        issue.type === "MISSING_EXIT_DATE"
-          ? this.employerAdapter.acceptExitDateCorrection(state, this.context)
-          : this.transferAdapter.reconcileOldBalance(state, this.context);
+  completeMarkExit(issueId: string): ApplicationSnapshot {
+    let state = this.selfServiceAdapter.completeMarkExit(
+      this.repository.getState(),
+      issueId,
+      this.context,
+    );
+    state = this.reevaluatePreflight(state, "MARK_EXIT_COMPLETED");
+    state = this.synchronizeClaimReadiness(state);
+    this.repository.saveState(state);
+    return this.getSnapshot();
+  }
+
+  createEmployerRequest(issueId: string): ApplicationSnapshot {
+    const state = this.employerAdapter.createRequest(
+      this.repository.getState(),
+      issueId,
+      this.context,
+    );
+    this.repository.saveState(state);
+    return this.getSnapshot();
+  }
+
+  resubmitEmployerRequest(issueId: string): ApplicationSnapshot {
+    const state = this.employerAdapter.resubmit(
+      this.repository.getState(),
+      issueId,
+      this.context,
+    );
+    this.repository.saveState(state);
+    return this.getSnapshot();
+  }
+
+  actOnEmployerRequest(
+    requestId: string,
+    decision: EmployerDecision,
+    reason?: string,
+  ): ApplicationSnapshot {
+    let state = this.employerAdapter.decide(
+      this.repository.getState(),
+      requestId,
+      decision,
+      reason,
+      this.context,
+    );
+    if (decision === "APPROVE") {
+      state = this.reevaluatePreflight(state, "EMPLOYER_REQUEST_APPROVED");
       state = this.synchronizeClaimReadiness(state);
-    } else {
-      state = this.progressIssue(state, issue, action);
     }
-
     this.repository.saveState(state);
     return this.getSnapshot();
   }
@@ -109,7 +159,11 @@ export class EpfoApplicationService {
   }
 
   advanceClaim(nextState: ClaimState): ApplicationSnapshot {
-    const state = this.claimAdapter.advance(this.repository.getState(), nextState, this.context);
+    const state = this.claimAdapter.advance(
+      this.repository.getState(),
+      nextState,
+      this.context,
+    );
     this.repository.saveState(state);
     return this.getSnapshot();
   }
@@ -119,35 +173,30 @@ export class EpfoApplicationService {
     return this.getSnapshot();
   }
 
-  private progressIssue(state: AppState, issue: Issue, action: IssueAction): AppState {
-    const nextStatus = action === "START" ? "ACTION_REQUIRED" : "WAITING_EXTERNAL";
-    const expectedAction = issue.status === "OPEN" ? "START" : "SUBMIT";
-    if (action !== expectedAction) {
-      throw new Error(
-        issue.status === "RESOLVED"
-          ? "This issue is already resolved."
-          : "Complete the current issue action before moving ahead.",
-      );
-    }
-
-    const result = transitionIssue(
-      {
-        issue,
-        nextStatus,
-        actorType: "CITIZEN",
-        actorName: state.member.name,
-        note:
-          action === "START"
-            ? "Aarav reviewed the issue and started the mock workflow."
-            : "Aarav submitted the request to the responsible simulated party.",
-      },
-      this.context,
-    );
-    state.issues = state.issues.map((candidate) =>
-      candidate.id === issue.id ? result.issue : candidate,
-    );
-    state.auditEvents.push(result.auditEvent);
-    return state;
+  private reevaluatePreflight(state: AppState, trigger: string): AppState {
+    const readiness = calculateReadiness(runPreflight(state.member));
+    return {
+      ...state,
+      auditEvents: [
+        ...state.auditEvents,
+        createAuditEvent(
+          {
+            aggregateType: "MEMBER",
+            aggregateId: state.member.id,
+            eventType: "PREFLIGHT_REEVALUATED",
+            actorType: "SYSTEM",
+            actorName: "Claim Preflight",
+            metadata: {
+              trigger,
+              passedCount: readiness.passedCount,
+              totalChecks: readiness.totalChecks,
+              readiness: readiness.percentage,
+            },
+          },
+          this.context,
+        ),
+      ],
+    };
   }
 
   private synchronizeClaimReadiness(state: AppState): AppState {

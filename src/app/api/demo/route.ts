@@ -7,8 +7,6 @@ import type { ClaimState } from "@/domain/schemas";
 const DemoActionBody = z.object({
   action: z.enum([
     "RESET",
-    "RESOLVE_EXIT",
-    "RECONCILE_BALANCE",
     "VERIFY_ELIGIBILITY",
     "VERIFY_RECORDS",
     "APPROVE_CLAIM",
@@ -33,19 +31,6 @@ export async function POST(request: Request) {
     if (action === "RESET") {
       return NextResponse.json(epfoService.reset(), { headers: noStoreHeaders });
     }
-    if (action === "RESOLVE_EXIT") {
-      return NextResponse.json(
-        epfoService.actOnIssue("issue-exit-date", "SIMULATE_RESOLUTION"),
-        { headers: noStoreHeaders },
-      );
-    }
-    if (action === "RECONCILE_BALANCE") {
-      return NextResponse.json(
-        epfoService.actOnIssue("issue-old-balance", "SIMULATE_RESOLUTION"),
-        { headers: noStoreHeaders },
-      );
-    }
-
     const target = claimActionTargets[action];
     if (!target) {
       throw new Error("Unknown demo action.");
