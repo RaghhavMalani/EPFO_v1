@@ -40,7 +40,7 @@ export default function DemoPage() {
   const claimIndex = CLAIM_SEQUENCE.indexOf(snapshot.claim.state);
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6 sm:py-14">
+    <div className="page-shell">
       <PageHeader
         eyebrow="Internal simulation"
         title="Demo control panel"
@@ -64,8 +64,8 @@ export default function DemoPage() {
       </aside>
 
       <section className="grid gap-5 py-9 sm:grid-cols-3">
-        <div className="rounded-2xl bg-[var(--accent-fill)] p-5 text-white">
-          <p className="text-sm text-white/75">Readiness</p>
+        <div className="rounded-2xl border border-[var(--line)] bg-[var(--surface)] p-5">
+          <p className="text-sm text-[var(--muted)]">Readiness</p>
           <p className="mt-2 text-4xl font-semibold tracking-[-0.04em]">{snapshot.readiness.percentage}%</p>
         </div>
         <div className="rounded-2xl border border-[var(--line)] bg-[var(--surface)] p-5">

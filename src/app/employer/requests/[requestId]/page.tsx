@@ -16,21 +16,40 @@ export default async function EmployerRequestPage({ params }: { params: Promise<
   const fields = Array.from(new Set([...Object.keys(request.currentRecord), ...Object.keys(request.proposedRecord)]));
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6 sm:py-14">
-      <PageHeader eyebrow={`Member request · ${request.memberName}`} title={request.title} description={`Related journey: ${request.relatedJourney}`} backHref="/employer/requests" backLabel="Member requests" aside={<StatusBadge status={request.status} />} />
-      <div className="grid gap-8 py-9 lg:grid-cols-[1.2fr_0.8fr]">
-        <div className="space-y-5">
-          <section className="overflow-hidden rounded-2xl border border-[var(--line)] bg-[var(--surface)]">
-            <div className="grid grid-cols-[0.8fr_1fr_1fr] gap-3 border-b border-[var(--line)] bg-[var(--surface-muted)] px-5 py-3 text-xs font-semibold uppercase tracking-[0.08em] text-[var(--muted)]"><span>Field</span><span>Current</span><span>Proposed</span></div>
-            {fields.map((field) => <div key={field} className="grid grid-cols-[0.8fr_1fr_1fr] gap-3 border-b border-[var(--line)] px-5 py-4 text-sm last:border-0"><span className="font-semibold">{field}</span><span className="text-[var(--muted)]">{request.currentRecord[field] ?? "Not recorded"}</span><span className="font-semibold text-[var(--accent)]">{request.proposedRecord[field] ?? "No change"}</span></div>)}
+    <div className="page-shell employer-page">
+      <PageHeader eyebrow={`Request ${request.id}`} title={request.title} description={`${request.memberName} · Related journey: ${request.relatedJourney}`} backHref="/employer/requests" backLabel="Member requests" aside={<StatusBadge status={request.status} />} />
+
+      <section className="request-context panel">
+        <div><span>Member</span><strong>{request.memberName}</strong></div>
+        <div><span>Submitted</span><strong className="tabular">{formatDateTime(request.submittedAt)}</strong></div>
+        <div><span>Request type</span><strong>{request.requestType.replaceAll("_", " ").toLowerCase()}</strong></div>
+        <div><span>Current owner</span><strong>{request.status === "INFORMATION_REQUESTED" ? request.memberName : snapshot.employer.name}</strong></div>
+      </section>
+
+      <div className="request-detail-layout">
+        <div className="request-detail-main">
+          <section>
+            <div><p className="record-label">Record comparison</p><h2 className="section-title">Current and proposed details</h2></div>
+            <div className="comparison-table panel">
+              <div className="comparison-head"><span>Field</span><span>Current details</span><span>Proposed details</span></div>
+              {fields.map((field) => (
+                <div key={field} className="comparison-row"><strong>{field}</strong><span>{request.currentRecord[field] ?? "Not recorded"}</span><span>{request.proposedRecord[field] ?? "No change"}</span></div>
+              ))}
+            </div>
           </section>
-          <section className="rounded-2xl border border-[var(--line)] bg-[var(--surface)] p-6"><InfoIcon size={24} className="text-[var(--accent)]" weight="fill" aria-hidden="true" /><h2 className="mt-4 text-xl font-semibold">Impact and context</h2><p className="mt-3 text-sm leading-6 text-[var(--muted)]">{request.whyItMatters}</p><ul className="mt-5 space-y-2 text-sm text-[var(--muted)]">{request.supportingContext.map((item) => <li key={item}>• {item}</li>)}</ul></section>
-          {request.status === "IN_REVIEW" ? <section className="rounded-2xl border border-[var(--line)] bg-[var(--surface)] p-6"><h2 className="text-xl font-semibold">Record your decision</h2><p className="mt-2 text-sm leading-6 text-[var(--muted)]">Approval updates the shared member record. Requesting information or rejecting requires a member-visible reason.</p><div className="mt-6"><EmployerDecisionForm requestId={request.id} /></div></section> : null}
-          {request.status === "APPROVED" ? <section className="rounded-2xl border border-[var(--success)] bg-[var(--success-soft)] p-6"><CheckCircleIcon size={26} weight="fill" className="text-[var(--success)]" aria-hidden="true" /><h2 className="mt-4 font-semibold">Approved and applied</h2><p className="mt-2 text-sm text-[var(--muted)]">The member record was updated, readiness reran automatically, and the claim can continue when all seven checks pass.</p></section> : null}
+
+          <section className="impact-panel panel">
+            <InfoIcon size={19} weight="fill" aria-hidden="true" />
+            <div><h2>Impact and supporting context</h2><p>{request.whyItMatters}</p><ul>{request.supportingContext.map((item) => <li key={item}>{item}</li>)}</ul></div>
+          </section>
+
+          {request.status === "IN_REVIEW" ? <section className="decision-panel panel"><div><p className="record-label">Decision</p><h2 className="section-title">Record your decision</h2><p>Approval updates the shared member record. A request for information or rejection requires a member-visible reason.</p></div><EmployerDecisionForm requestId={request.id} /></section> : null}
+          {request.status === "APPROVED" ? <section className="approved-panel"><CheckCircleIcon size={20} weight="fill" aria-hidden="true" /><div><strong>Approved and applied</strong><p>The member record was updated and Claim Preflight reran automatically.</p></div></section> : null}
         </div>
-        <aside className="space-y-5">
-          <section className="rounded-2xl border border-[var(--line)] bg-[var(--surface)] p-6"><h2 className="font-semibold">Employer action</h2>{request.status === "AWAITING_REVIEW" ? <ActionButton endpoint={`/api/employer/requests/${request.id}`} body={{ action: "START_REVIEW" }} className="mt-5" showArrow>Start review</ActionButton> : <p className="mt-3 text-sm leading-6 text-[var(--muted)]">{request.status === "INFORMATION_REQUESTED" ? "Waiting for the member to supply synthetic context." : request.status === "REJECTED" ? `Request rejected. Reason: ${request.reason}` : request.status === "APPROVED" ? "No further employer action is required." : "Compare the values and record a decision."}</p>}</section>
-          <section className="rounded-2xl border border-[var(--line)] bg-[var(--surface)] p-6"><h2 className="font-semibold">Request history</h2><div className="mt-5 space-y-5">{request.events.toReversed().map((event) => <div key={event.id} className="grid grid-cols-[1.25rem_1fr] gap-3"><ArrowRightIcon size={17} className="mt-0.5 text-[var(--accent)]" aria-hidden="true" /><div><p className="text-sm font-semibold">{event.note}</p><p className="mt-1 text-xs text-[var(--muted)]">{event.actorName} · {formatDateTime(event.timestamp)}</p></div></div>)}</div></section>
+
+        <aside className="request-detail-side">
+          <section className="panel request-action-panel"><p className="record-label">Required employer action</p>{request.status === "AWAITING_REVIEW" ? <><h2>Begin assessment</h2><p>Opening review records that this establishment is now assessing the proposed change.</p><ActionButton endpoint={`/api/employer/requests/${request.id}`} body={{ action: "START_REVIEW" }} className="mt-5" showArrow>Start review</ActionButton></> : <><h2>{request.status === "IN_REVIEW" ? "Decision required" : "No action available"}</h2><p>{request.status === "INFORMATION_REQUESTED" ? "Waiting for the member to supply synthetic context." : request.status === "REJECTED" ? `Rejected: ${request.reason}` : request.status === "APPROVED" ? "This request is complete." : "Compare the values and record a decision below."}</p></>}</section>
+          <section className="panel request-history"><p className="record-label">Audit trail</p><h2>Request history</h2>{request.events.toReversed().map((event) => <div key={event.id}><ArrowRightIcon size={15} aria-hidden="true" /><p><strong>{event.note}</strong><span>{event.actorName} · {formatDateTime(event.timestamp)}</span></p></div>)}</section>
         </aside>
       </div>
       <PrototypeNotice compact />

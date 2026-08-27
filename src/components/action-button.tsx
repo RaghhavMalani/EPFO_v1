@@ -59,7 +59,7 @@ export function ActionButton({
         disabled={disabled || isPending}
         className={buttonClassName(variant)}
       >
-        {isPending ? "Working..." : children}
+        {isPending ? "Working…" : children}
         {showArrow && !isPending ? <ArrowRightIcon size={18} aria-hidden="true" /> : null}
       </button>
       {error ? (

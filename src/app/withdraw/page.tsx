@@ -1,79 +1,37 @@
-import {
-  CheckCircleIcon,
-  EyeIcon,
-  ShieldCheckIcon,
-} from "@phosphor-icons/react/dist/ssr";
+import { CheckCircleIcon } from "@phosphor-icons/react/dist/ssr";
 import { epfoService } from "@/application/service-instance";
 import { ActionButton } from "@/components/action-button";
 import { PageHeader, PrototypeNotice } from "@/components/ui";
 import { formatCurrency } from "@/lib/format";
 
-export const metadata = { title: "Withdraw PF" };
+export const metadata = { title: "Final PF settlement" };
 
 export default function WithdrawPage() {
   const { member, withdrawalService } = epfoService.getSnapshot();
-
   return (
-    <div className="mx-auto max-w-5xl px-4 py-10 sm:px-6 sm:py-14">
-      <PageHeader
-        eyebrow="Online Services"
-        title="Final PF settlement"
-        description="You are not currently employed in a PF-covered establishment. Check the account before starting this synthetic final-settlement journey."
-        backHref="/online-services"
-        backLabel="Online Services"
-      />
-
-      <div className="grid gap-8 py-10 lg:grid-cols-[1fr_0.72fr]">
-        <section className="rounded-2xl border border-[var(--line)] bg-[var(--surface)] p-6 sm:p-8">
-          <p className="text-sm font-medium text-[var(--muted)]">Full available PF balance</p>
-          <p className="mt-2 text-4xl font-semibold tracking-[-0.04em]">
-            {formatCurrency(member.requestedWithdrawalPaise)}
-          </p>
-          <div className="mt-6 rounded-xl bg-[var(--surface-muted)] p-4 text-sm leading-6">
-            <p className="font-semibold">Available synthetic balance</p>
-            <p className="mt-1 text-[var(--muted)]">
-              {formatCurrency(member.currentPfBalancePaise)} under {member.uanMasked}.
-            </p>
-            <p className="mt-2 text-xs font-semibold text-[var(--accent)]">Internal service mapping: Final PF settlement · Form 19</p>
-          </div>
-          <ActionButton
-            endpoint="/api/actions/preflight"
-            body={{}}
-            successHref="/withdraw/preflight"
-            showArrow
-            className="mt-7"
-          >
-            Run seven readiness checks
-          </ActionButton>
-          <p className="mt-4 text-xs leading-5 text-[var(--muted)]">
-            {withdrawalService.explanation} AI does not decide eligibility or amounts.
-          </p>
+    <div className="page-shell page-shell--narrow">
+      <PageHeader eyebrow="Online Services · Claim" title="Final PF settlement" description="Check your account before starting the synthetic Form 19 journey." backHref="/online-services" backLabel="Online Services" />
+      <div className="claim-start-layout">
+        <section className="claim-start panel">
+          <div className="claim-start__amount"><p className="record-label">Eligible amount</p><strong className="tabular">{formatCurrency(member.requestedWithdrawalPaise)}</strong><span>Full available PF balance under {member.uanMasked}</span></div>
+          <dl className="claim-start__facts">
+            <div><dt>Claim type</dt><dd>Form 19</dd></div>
+            <div><dt>Employment status</dt><dd>Not currently PF-covered</dd></div>
+            <div><dt>Checks required</dt><dd>Seven deterministic checks</dd></div>
+          </dl>
+          <div className="claim-start__action"><ActionButton endpoint="/api/actions/preflight" body={{}} successHref="/withdraw/preflight" showArrow>Run seven readiness checks</ActionButton><p>{withdrawalService.explanation} AI does not decide eligibility or amounts.</p></div>
         </section>
-
-        <section>
-          <h2 className="text-xl font-semibold">What happens now</h2>
-          <div className="mt-6 space-y-6">
-            {[
-              [EyeIcon, "Check first", "See every passed check and anything that needs attention."],
-              [ShieldCheckIcon, "Fix with context", "Know why it matters and who is responsible."],
-              [CheckCircleIcon, "Review when ready", "Submit only after readiness reaches 100%."],
-            ].map(([Icon, title, description]) => {
-              const ItemIcon = Icon as typeof EyeIcon;
-              return (
-                <div key={title as string} className="grid grid-cols-[2.25rem_1fr] gap-3">
-                  <ItemIcon size={24} className="text-[var(--accent)]" aria-hidden="true" />
-                  <div>
-                    <p className="font-semibold">{title as string}</p>
-                    <p className="mt-1 text-sm leading-6 text-[var(--muted)]">{description as string}</p>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </section>
+        <aside className="claim-steps">
+          <h2 className="section-title">Before you submit</h2>
+          {[
+            ["1", "Check", "See every passed check and every blocker."],
+            ["2", "Resolve", "Follow the exact owner and required action."],
+            ["3", "Review", "Confirm the claim only when all checks pass."],
+          ].map(([number, title, text]) => <div key={number}><span>{number}</span><p><strong>{title}</strong><small>{text}</small></p></div>)}
+          <p className="claim-steps__note"><CheckCircleIcon size={16} weight="fill" aria-hidden="true" /> No claim is submitted on this screen.</p>
+        </aside>
       </div>
-
-      <PrototypeNotice />
+      <PrototypeNotice compact />
     </div>
   );
 }

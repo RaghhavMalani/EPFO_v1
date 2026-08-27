@@ -39,7 +39,7 @@ export function EmployerDecisionForm({ requestId }: { requestId: string }) {
         onChange={(event) => setReason(event.target.value)}
         rows={4}
         placeholder="Explain what the member needs to know."
-        className="mt-2 w-full rounded-xl border border-[var(--line-strong)] bg-[var(--canvas)] px-4 py-3 text-sm outline-none focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent-soft)]"
+        className="mt-2 w-full rounded-[6px] border border-[var(--line-strong)] bg-[var(--surface)] px-4 py-3 text-sm outline-none focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent-soft)]"
       />
       <p className="mt-2 text-xs leading-5 text-[var(--muted)]">This reason appears in the member&apos;s issue history.</p>
       <div className="mt-5 flex flex-wrap gap-3">

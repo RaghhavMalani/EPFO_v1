@@ -19,7 +19,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
     <html lang="en">
       <body className={GeistSans.className}>
         <AppHeader />
-        <main>{children}</main>
+        <main id="main-content">{children}</main>
         <AppFooter />
       </body>
     </html>

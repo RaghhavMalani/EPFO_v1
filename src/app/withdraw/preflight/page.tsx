@@ -1,152 +1,70 @@
-import {
-  ArrowRightIcon,
-  CheckCircleIcon,
-  UserFocusIcon,
-  WarningCircleIcon,
-} from "@phosphor-icons/react/dist/ssr";
+import { ArrowRightIcon, CheckCircleIcon, WarningCircleIcon } from "@phosphor-icons/react/dist/ssr";
 import Link from "next/link";
 import { epfoService } from "@/application/service-instance";
-import { LinkButton, PageHeader, StatusBadge } from "@/components/ui";
+import { LinkButton, PageHeader, StatusBadge, buttonClassName } from "@/components/ui";
 import type { PreflightCheck } from "@/domain/schemas";
 import { formatCurrency } from "@/lib/format";
 
-export const metadata = { title: "Claim Preflight" };
+export const metadata = { title: "Form 19 preflight" };
 
-function ReadyCheck({ check }: { check: PreflightCheck }) {
+function CheckRow({ check, index }: { check: PreflightCheck; index: number }) {
+  const passed = check.status === "PASS";
+  const displayLabel = !passed && check.id === "EXIT_DATE_RECORDED"
+    ? "Date of Exit is missing"
+    : !passed && check.id === "LEGACY_RECORD_ALIGNED"
+      ? "Employment record needs review"
+      : check.label;
+  const nextStep = check.id === "EXIT_DATE_RECORDED"
+    ? "The record is updated and preflight reruns automatically. Readiness moves to 6 of 7 checks."
+    : "The employer reviews the proposed correction. Approval updates the record and preflight reruns automatically.";
   return (
-    <div className="grid grid-cols-[1.75rem_1fr] gap-3 py-4">
-      <CheckCircleIcon
-        size={21}
-        weight="fill"
-        className="mt-0.5 text-[var(--success)]"
-        aria-hidden="true"
-      />
-      <div>
-        <p className="font-semibold">{check.label}</p>
-        <p className="mt-1 text-sm leading-6 text-[var(--muted)]">{check.userExplanation}</p>
-      </div>
-    </div>
-  );
-}
-
-function AttentionCheck({ check }: { check: PreflightCheck }) {
-  return (
-    <article className="rounded-2xl border border-[var(--warning)] bg-[var(--surface)] p-5 sm:p-6">
-      <div className="flex items-start gap-3">
-        <WarningCircleIcon
-          size={24}
-          weight="fill"
-          className="mt-0.5 shrink-0 text-[var(--warning)]"
-          aria-hidden="true"
-        />
-        <div className="min-w-0 flex-1">
-          <div className="flex flex-wrap items-start justify-between gap-3">
-            <h3 className="text-lg font-semibold tracking-[-0.015em]">{check.label}</h3>
-            <StatusBadge status={check.status} />
-          </div>
-          <p className="mt-3 text-sm leading-6 text-[var(--muted)]">{check.userExplanation}</p>
-          <dl className="mt-5 grid gap-4 border-t border-[var(--line)] pt-5 sm:grid-cols-2">
-            <div>
-              <dt className="text-xs font-semibold text-[var(--muted)]">Responsible</dt>
-              <dd className="mt-1 text-sm font-semibold">{check.responsibleParty}</dd>
-            </div>
-            <div>
-              <dt className="text-xs font-semibold text-[var(--muted)]">Recommended action</dt>
-              <dd className="mt-1 text-sm font-semibold">{check.recommendedAction}</dd>
-            </div>
-          </dl>
-          {check.issueId ? (
-            <Link
-              href={`/issues/${check.issueId}`}
-              className="mt-5 inline-flex items-center gap-2 rounded-lg text-sm font-semibold text-[var(--accent)] hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]"
-            >
-              See how to fix this
-              <ArrowRightIcon size={17} aria-hidden="true" />
-            </Link>
-          ) : null}
+    <article className={passed ? "preflight-row" : "preflight-row preflight-row--blocked"}>
+      <div className="preflight-row__number tabular">{index + 1}</div>
+      <div className="preflight-row__main">
+        <div className="preflight-row__title">
+          {passed ? <CheckCircleIcon size={19} weight="fill" aria-hidden="true" /> : <WarningCircleIcon size={19} weight="fill" aria-hidden="true" />}
+          <span><strong>{displayLabel}</strong><small>{check.userExplanation}</small></span>
         </div>
+        {!passed ? (
+          <div className="resolution-panel">
+            <dl>
+              <div><dt>What is wrong</dt><dd>{check.reason}</dd></div>
+              <div><dt>Why it matters</dt><dd>{check.userExplanation}</dd></div>
+              <div><dt>Who can resolve it</dt><dd>{check.responsibleParty}</dd></div>
+              <div><dt>Your next action</dt><dd>{check.recommendedAction}</dd></div>
+              <div className="resolution-panel__wide"><dt>What happens next</dt><dd>{nextStep}</dd></div>
+            </dl>
+            {check.issueId ? <Link href={`/issues/${check.issueId}`}>Resolve issue <ArrowRightIcon size={16} aria-hidden="true" /></Link> : null}
+          </div>
+        ) : null}
       </div>
+      <StatusBadge status={check.status} />
     </article>
   );
 }
 
 export default function PreflightPage() {
   const snapshot = epfoService.getSnapshot();
-  const readyChecks = snapshot.preflight.filter((check) => check.status === "PASS");
-  const attentionChecks = snapshot.preflight.filter((check) => check.status !== "PASS");
-  const title = snapshot.readiness.isReady
-    ? "You're ready to claim."
-    : "Let's check your claim before you file.";
-
   return (
-    <div className="mx-auto max-w-5xl px-4 py-10 sm:px-6 sm:py-14">
-      <PageHeader
-        title={title}
-        description={
-          snapshot.readiness.isReady
-            ? "Every deterministic check has passed. Review the synthetic withdrawal before you submit it."
-            : "Claim Preflight shows what passed, what needs attention, and exactly who can fix it."
-        }
-        backHref="/withdraw"
-        backLabel="Withdrawal details"
-      />
+    <div className="page-shell page-shell--narrow">
+      <PageHeader eyebrow="Online Services · Form 19 preflight" title="Final PF settlement" description="Preflight checks, issue ownership, and the action required before submission." backHref="/withdraw" backLabel="Withdrawal details" />
 
-      <section className="grid gap-5 py-9 md:grid-cols-[0.72fr_1.28fr]">
-        <div className="rounded-2xl bg-[var(--accent-fill)] p-6 text-white sm:p-7">
-          <p className="text-sm font-medium text-white/75">Claim readiness</p>
-          <p className="mt-2 text-6xl font-semibold tracking-[-0.055em]">
-            {snapshot.readiness.percentage}%
-          </p>
-          <p className="mt-5 text-sm leading-6 text-white/80">
-            {snapshot.readiness.passedCount} of {snapshot.readiness.totalChecks} checks passed. {snapshot.readiness.attentionCount === 0
-              ? "No items need attention."
-              : `${snapshot.readiness.attentionCount} ${snapshot.readiness.attentionCount === 1 ? "check needs" : "checks need"} action.`}
-          </p>
-        </div>
-        <div className="rounded-2xl border border-[var(--line)] bg-[var(--surface)] p-6 sm:p-7">
-          <div className="flex gap-3">
-            <UserFocusIcon size={25} className="shrink-0 text-[var(--accent)]" aria-hidden="true" />
-            <div>
-              <h2 className="font-semibold">A score you can explain</h2>
-              <p className="mt-2 text-sm leading-6 text-[var(--muted)]">
-                Readiness is the raw pass count: passed checks divided by seven. There are no hidden weights. 5 of 7 is 71%, 6 of 7 is 86%, and 7 of 7 is 100%.
-              </p>
-            </div>
-          </div>
+      <section className="preflight-facts panel" aria-label="Claim summary">
+        <div><span>Eligible amount</span><strong className="tabular">{formatCurrency(snapshot.member.requestedWithdrawalPaise)}</strong></div>
+        <div><span>Claim type</span><strong>Final PF settlement · Form 19</strong></div>
+        <div><span>Readiness</span><strong className="tabular">{snapshot.readiness.passedCount} of {snapshot.readiness.totalChecks} checks passed</strong></div>
+      </section>
+
+      <section className="preflight-section">
+        <div className="section-heading-row"><div><p className="record-label">Eligibility checks</p><h2 className="section-title">Every check, in order</h2></div><p className="section-support">No hidden weights</p></div>
+        <div className="preflight-list panel">
+          {snapshot.preflight.map((check, index) => <CheckRow key={check.id} check={check} index={index} />)}
         </div>
       </section>
 
-      {attentionChecks.length > 0 ? (
-        <section className="py-5">
-          <h2 className="text-2xl font-semibold tracking-[-0.025em]">Needs attention</h2>
-          <div className="mt-5 space-y-4">
-            {attentionChecks.map((check) => (
-              <AttentionCheck key={check.id} check={check} />
-            ))}
-          </div>
-        </section>
-      ) : (
-        <section className="rounded-2xl border border-[var(--success)] bg-[var(--success-soft)] p-6 sm:p-8">
-          <CheckCircleIcon size={30} weight="fill" className="text-[var(--success)]" aria-hidden="true" />
-          <h2 className="mt-4 text-2xl font-semibold tracking-[-0.025em]">All preflight checks passed</h2>
-          <p className="mt-2 max-w-xl leading-7 text-[var(--muted)]">
-            The synthetic identity, Aadhaar, PAN, mobile, bank, Date of Exit, and legacy record checks are ready.
-          </p>
-          <div className="mt-6">
-            <LinkButton href="/withdraw/review">
-              Review {formatCurrency(snapshot.member.requestedWithdrawalPaise)} withdrawal
-            </LinkButton>
-          </div>
-        </section>
-      )}
-
-      <section className="mt-10 py-5">
-        <h2 className="text-2xl font-semibold tracking-[-0.025em]">Ready</h2>
-        <div className="mt-4 grid gap-x-8 rounded-2xl border border-[var(--line)] bg-[var(--surface)] px-5 md:grid-cols-2 md:px-6">
-          {readyChecks.map((check) => (
-            <ReadyCheck key={check.id} check={check} />
-          ))}
-        </div>
+      <section className={snapshot.readiness.isReady ? "preflight-decision preflight-decision--ready" : "preflight-decision"}>
+        <div>{snapshot.readiness.isReady ? <CheckCircleIcon size={21} weight="fill" aria-hidden="true" /> : <WarningCircleIcon size={21} weight="fill" aria-hidden="true" />}<p><strong className="tabular">{snapshot.readiness.passedCount} of {snapshot.readiness.totalChecks} checks passed</strong><span>{snapshot.readiness.isReady ? "All required checks are complete." : `${snapshot.readiness.attentionCount} issues must be resolved before this claim can continue.`}</span></p></div>
+        {snapshot.readiness.isReady ? <LinkButton href="/withdraw/review">Continue to claim</LinkButton> : <button type="button" disabled className={buttonClassName("primary")}>Continue to claim</button>}
       </section>
     </div>
   );
