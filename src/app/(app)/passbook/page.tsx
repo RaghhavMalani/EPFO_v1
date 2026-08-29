@@ -5,6 +5,8 @@ import { PrototypeNotice } from "@/components/ui";
 import { contributionStatusLabel, selectFocusMonth, type PassbookMonth } from "@/domain/contribution-health";
 import { splitContribution } from "@/domain/contribution-split";
 import type { ContributionStatus } from "@/domain/experience-v2";
+import { PrintButton } from "@/components/print-button";
+import { T } from "@/lib/i18n/t";
 import { formatAmount, formatCurrency, formatDate, formatMonth } from "@/lib/format";
 
 export const metadata = { title: "Passbook" };
@@ -183,7 +185,7 @@ function ExplanationPanel({ month }: { month: PassbookMonth }) {
       </dl>
 
       <div className="explain-block">
-        <h3>Where does my money go?</h3>
+        <h3><T id="passbook.whereMoneyGoes" /></h3>
         <div className="split-bar" role="img" aria-label={`For ${label}, ${split.employeePfSharePercent}% is your PF share, ${split.employerPfSharePercent}% is the employer PF share, and ${split.employerEpsSharePercent}% is the employer EPS share`}>
           <span className="split-bar__segment split-bar__segment--employee" style={{ width: `${split.employeePfShareOfTotalPercent}%` }} />
           <span className="split-bar__segment split-bar__segment--employer" style={{ width: `${split.employerPfShareOfTotalPercent}%` }} />
@@ -254,32 +256,35 @@ export default async function PassbookPage({
     <div className="page-shell">
       <header className="passbook-masthead">
         <div>
-          <h1>Passbook</h1>
-          <p>Every month filed against your UAN, and what the contribution health check found.</p>
+          <h1><T id="passbook.title" /></h1>
+          <p><T id="passbook.subtitle" /></p>
         </div>
-        <form className="passbook-filters" method="get" action="/passbook">
-          <div>
-            <label htmlFor="filter-year">Year</label>
-            <select id="filter-year" name="year" defaultValue={year}>
-              <option value="all">All years</option>
-              {years.map((value) => <option key={value} value={value}>{value}</option>)}
-            </select>
-          </div>
-          <div>
-            <label htmlFor="filter-employer">Employer</label>
-            <select id="filter-employer" name="employer" defaultValue={employer}>
-              <option value="all">All employers</option>
-              {employers.map((value) => <option key={value} value={value}>{value}</option>)}
-            </select>
-          </div>
-          <div>
-            <label htmlFor="filter-status">Status</label>
-            <select id="filter-status" name="status" defaultValue={status}>
-              {STATUS_FILTERS.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}
-            </select>
-          </div>
-          <button type="submit">Apply</button>
-        </form>
+        <div className="passbook-masthead__actions">
+          <form className="passbook-filters" method="get" action="/passbook">
+            <div>
+              <label htmlFor="filter-year">Year</label>
+              <select id="filter-year" name="year" defaultValue={year}>
+                <option value="all">All years</option>
+                {years.map((value) => <option key={value} value={value}>{value}</option>)}
+              </select>
+            </div>
+            <div>
+              <label htmlFor="filter-employer">Employer</label>
+              <select id="filter-employer" name="employer" defaultValue={employer}>
+                <option value="all">All employers</option>
+                {employers.map((value) => <option key={value} value={value}>{value}</option>)}
+              </select>
+            </div>
+            <div>
+              <label htmlFor="filter-status">Status</label>
+              <select id="filter-status" name="status" defaultValue={status}>
+                {STATUS_FILTERS.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}
+              </select>
+            </div>
+            <button type="submit">Apply</button>
+          </form>
+          <PrintButton label="Download statement" />
+        </div>
       </header>
 
       <section className="passbook-balance" aria-label="Balance and contribution totals">

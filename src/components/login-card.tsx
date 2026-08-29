@@ -4,20 +4,23 @@ import { ArrowRightIcon } from "@phosphor-icons/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { type FormEvent, type ReactNode, useState } from "react";
 import { buttonClassName } from "@/components/ui";
+import { useTranslation } from "@/lib/i18n/t";
 import { DEMO_PASSWORD, ROLE_HOME, type Role } from "@/lib/auth";
 
 type LoginCardProps = {
   role: Role;
-  badge: string;
   name: string;
   idLabel: string;
   idValue: string;
   icon: ReactNode;
 };
 
-export function LoginCard({ role, badge, name, idLabel, idValue, icon }: LoginCardProps) {
+export function LoginCard({ role, name, idLabel, idValue, icon }: LoginCardProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const t = useTranslation();
+  const badge = role === "member" ? "Member" : "Employer";
+  const badgeLabel = t(role === "member" ? "login.memberBadge" : "login.employerBadge");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isPending, setIsPending] = useState(false);
@@ -47,13 +50,13 @@ export function LoginCard({ role, badge, name, idLabel, idValue, icon }: LoginCa
     <form onSubmit={handleSubmit} className="login-card panel" aria-labelledby={`login-card-${role}-name`}>
       <div className="login-card__head">
         <span className="login-card__icon" aria-hidden="true">{icon}</span>
-        <span className="login-card__badge">{badge}</span>
+        <span className="login-card__badge">{badgeLabel}</span>
       </div>
       <h2 id={`login-card-${role}-name`}>{name}</h2>
       <p className="login-card__identifier tabular">{idLabel} · {idValue}</p>
 
       <label className="login-card__field">
-        <span>Password</span>
+        <span>{t("login.passwordLabel")}</span>
         <input
           type="password"
           value={password}
@@ -74,7 +77,7 @@ export function LoginCard({ role, badge, name, idLabel, idValue, icon }: LoginCa
           onClick={() => setPassword(DEMO_PASSWORD)}
           className={buttonClassName("secondary")}
         >
-          Use demo credentials
+          {t("login.useDemoCredentials")}
         </button>
         <button type="submit" disabled={isPending} className={buttonClassName("primary")}>
           {isPending ? "Signing in…" : `Sign in as ${badge.toLowerCase()}`}

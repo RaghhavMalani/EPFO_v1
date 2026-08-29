@@ -8,6 +8,7 @@ import Link from "next/link";
 import { epfoService } from "@/application/service-instance";
 import { LinkButton, PageHeader } from "@/components/ui";
 import type { Issue, PreflightCheck } from "@/domain/schemas";
+import { T } from "@/lib/i18n/t";
 import { formatCurrency } from "@/lib/format";
 
 export const metadata = { title: "Final settlement readiness" };
@@ -53,7 +54,7 @@ export default function PreflightPage() {
   return (
     <div className="page-shell page-shell--narrow">
       <PageHeader
-        title="Final settlement readiness"
+        title={<T id="withdraw.preflightTitle" />}
         description="Form 19 is the application to settle your PF in full. It can be filed once every required check is complete."
         backHref="/withdraw"
         backLabel="Withdrawal details"

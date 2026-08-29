@@ -53,6 +53,15 @@ button { touch-action: manipulation; }
 .identity-meta { margin-left: auto; display: flex; align-items: center; gap: 20px; text-align: right; font-size: 13px; }
 .identity-meta strong, .identity-meta span { display: block; }
 .identity-meta span { margin-top: 2px; color: var(--muted); font-size: 12px; font-variant-numeric: tabular-nums; }
+.language-toggle { display: inline-flex; border: 1px solid var(--line-strong); border-radius: 999px; overflow: hidden; }
+.language-toggle__option { border: 0; background: var(--surface); padding: 5px 10px; color: var(--muted); font: inherit; font-size: 12px; font-weight: 650; cursor: pointer; }
+.language-toggle__option--active { background: var(--accent); color: white; }
+.language-toggle__option:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.app-header--employer .language-toggle { border-color: #667076; }
+.app-header--employer .language-toggle__option { background: transparent; color: #c3cacf; }
+.app-header--employer .language-toggle__option--active { background: #75bdc2; color: #052226; }
+.login-language-toggle { display: flex; justify-content: center; margin-bottom: 20px; }
+
 .role-switch { color: var(--accent); font-size: 13px; font-weight: 650; }
 .role-switch--button { border: 0; background: none; padding: 0; font: inherit; cursor: pointer; }
 .role-switch--button:disabled { cursor: not-allowed; opacity: .6; }
@@ -100,6 +109,8 @@ button { touch-action: manipulation; }
 .status-badge--info { background: var(--info-soft); color: var(--info); }
 .link-row { transition: background-color 140ms ease, border-color 140ms ease; }
 .link-row:hover { background: var(--surface-raised); }
+.link-row:focus-visible { position: relative; z-index: 1; outline: 2px solid var(--accent); outline-offset: -2px; }
+.completeness-meter__cta:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .balance-value { margin-top: 8px; font-size: clamp(2.5rem, 5vw, 4rem); line-height: 1; font-weight: 680; letter-spacing: -.055em; }
 .text-link { display: inline-flex; align-items: center; gap: 6px; margin-top: 18px; border-radius: 4px; color: var(--accent); font-size: 14px; font-weight: 650; }
 .text-link:hover { text-decoration: underline; text-underline-offset: 3px; }
@@ -379,6 +390,7 @@ button { touch-action: manipulation; }
 .passbook-masthead { display: flex; align-items: end; justify-content: space-between; gap: 28px; padding-bottom: 20px; border-bottom: 1px solid var(--line); }
 .passbook-masthead h1 { font-size: clamp(1.6rem, 2.6vw, 2rem); line-height: 1.12; font-weight: 680; letter-spacing: -.032em; }
 .passbook-masthead p { max-width: 520px; margin-top: 8px; color: var(--muted); font-size: 15px; line-height: 1.55; }
+.passbook-masthead__actions { display: flex; flex-wrap: wrap; align-items: end; gap: 14px; }
 .passbook-filters { display: flex; align-items: end; gap: 14px; }
 .passbook-filters > div { display: grid; gap: 5px; }
 .passbook-filters label { color: var(--muted); font-size: 12px; font-weight: 650; }
@@ -889,6 +901,18 @@ button { touch-action: manipulation; }
    handled by the global rule below, which forces near-zero animation duration. */
 @keyframes state-enter { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
 .state-enter { animation: state-enter 260ms ease; }
+
+@media print {
+  .app-header, .app-footer, .skip-link, .prototype-notice, .language-toggle { display: none !important; }
+  body { background: white; color: black; }
+  .page-shell { width: 100%; max-width: none; padding: 0; }
+  a { color: black; text-decoration: none; }
+  .passbook-masthead__actions, .ledger-table__action, .explain-panel__close, .chart-legend { display: none !important; }
+  .passbook-body { grid-template-columns: 1fr; }
+  .ledger-table { font-size: 11px; }
+  .ledger-table tbody tr:hover { background: none; }
+  .explain-panel { position: static; border: 1px solid #000; break-inside: avoid; }
+}
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; }

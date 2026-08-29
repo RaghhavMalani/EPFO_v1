@@ -9,6 +9,7 @@ import { epfoService, experienceV2Service } from "@/application/service-instance
 import { LinkButton, PrototypeNotice } from "@/components/ui";
 import { buildMemberActivity, type ActivityTone } from "@/domain/activity-feed";
 import { contributionStatusLabel, selectPassbookHighlights } from "@/domain/contribution-health";
+import { T } from "@/lib/i18n/t";
 import { formatAmount, formatCurrency, formatDateTime, formatMonth } from "@/lib/format";
 
 const PF_SERVICES = [
@@ -44,9 +45,9 @@ export default function HomePage() {
       <header className="home-masthead">
         <div>
           <h1>Good afternoon, {snapshot.member.name.split(" ")[0]}.</h1>
-          <p>Your PF position, what changed recently, and anything that needs you.</p>
+          <p><T id="home.subtitle" /></p>
         </div>
-        <LinkButton href="/online-services">Open PF services</LinkButton>
+        <LinkButton href="/online-services"><T id="home.openServices" /></LinkButton>
       </header>
 
       <section className="account-band" aria-label="Provident fund position">
@@ -75,7 +76,7 @@ export default function HomePage() {
 
         <div className="readiness-card state-enter" key={readiness.passedCount}>
           <div className="readiness-card__head">
-            <h2>Final settlement readiness</h2>
+            <h2><T id="home.readinessHeading" /></h2>
             <p className="tabular">
               <strong>{readiness.passedCount}</strong>
               <span>of {readiness.totalChecks} checks</span>
@@ -104,7 +105,7 @@ export default function HomePage() {
 
       <section className="home-section" aria-labelledby="contributions-heading">
         <div className="home-section__head">
-          <h2 id="contributions-heading">Recent contributions</h2>
+          <h2 id="contributions-heading"><T id="home.contributionsHeading" /></h2>
           <Link href="/passbook" className="text-link text-link--flush">
             View passbook
             <ArrowRightIcon size={16} aria-hidden="true" />
@@ -130,7 +131,7 @@ export default function HomePage() {
 
       <section className="home-section" aria-labelledby="services-heading">
         <div className="home-section__head">
-          <h2 id="services-heading">PF services</h2>
+          <h2 id="services-heading"><T id="home.servicesHeading" /></h2>
         </div>
         <div className="service-directory">
           <ul>
@@ -165,7 +166,11 @@ export default function HomePage() {
 
       <section className="home-section" aria-labelledby="activity-heading">
         <div className="home-section__head">
-          <h2 id="activity-heading">Recent activity</h2>
+          <h2 id="activity-heading"><T id="home.activityHeading" /></h2>
+          <Link href="/activity" className="text-link text-link--flush">
+            View all activity
+            <ArrowRightIcon size={16} aria-hidden="true" />
+          </Link>
         </div>
         <ul className="activity-ledger">
           {activity.map((entry) => {

@@ -9,6 +9,7 @@ import {
   estimateEpsPension,
   projectRetirementCorpus,
 } from "@/domain/pension";
+import { T } from "@/lib/i18n/t";
 import { formatCurrency } from "@/lib/format";
 
 export const metadata = { title: "Pension and retirement projection" };
@@ -43,12 +44,12 @@ export default function PensionPage() {
     <div className="page-shell">
       <PageHeader
         eyebrow="Online Services · Illustration"
-        title="Pension and retirement projection"
+        title={<T id="pension.title" />}
         description="Two synthetic illustrations built from your deterministic PF record: a public-formula EPS pension estimate, and a compounding retirement corpus projection to age 58."
       />
 
       <section className="pension-anchor" aria-label="Projected corpus at retirement">
-        <p className="record-label">Projected corpus at age {RETIREMENT_AGE}</p>
+        <p className="record-label"><T id="pension.corpusAtRetirement" /> {RETIREMENT_AGE}</p>
         <p className="balance-value tabular">{formatCurrency(projection.corpusAtRetirementPaise)}</p>
         <p className="pension-anchor__note">
           Starting from today&apos;s {formatCurrency(projection.startingBalancePaise)} balance, assuming a flat {formatCurrency(monthlyContributionPaise)} monthly contribution compounding at the synthetic {(EPF_SYNTHETIC_ANNUAL_INTEREST_RATE * 100).toFixed(2)}% annual EPF rate over the next {projection.yearsToRetirement} years. This is an illustration, not a guarantee.

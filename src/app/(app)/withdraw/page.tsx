@@ -2,6 +2,7 @@ import { CheckCircleIcon } from "@phosphor-icons/react/dist/ssr";
 import { epfoService } from "@/application/service-instance";
 import { ActionButton } from "@/components/action-button";
 import { PageHeader, PrototypeNotice } from "@/components/ui";
+import { T } from "@/lib/i18n/t";
 import { formatCurrency } from "@/lib/format";
 
 export const metadata = { title: "Final PF settlement" };
@@ -10,7 +11,7 @@ export default function WithdrawPage() {
   const { member, withdrawalService } = epfoService.getSnapshot();
   return (
     <div className="page-shell page-shell--narrow">
-      <PageHeader eyebrow="Online Services · Claim" title="Final PF settlement" description="Check your account before starting the synthetic Form 19 journey." backHref="/online-services" backLabel="Online Services" />
+      <PageHeader eyebrow="Online Services · Claim" title={<T id="withdraw.title" />} description="Check your account before starting the synthetic Form 19 journey." backHref="/online-services" backLabel="Online Services" />
       <div className="claim-start-layout">
         <section className="claim-start panel">
           <div className="claim-start__amount"><p className="record-label">Eligible amount</p><strong className="tabular">{formatCurrency(member.requestedWithdrawalPaise)}</strong><span>Full available PF balance under {member.uanMasked}</span></div>

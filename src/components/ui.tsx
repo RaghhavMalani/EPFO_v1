@@ -6,8 +6,8 @@ import { humanizeState } from "@/lib/format";
 
 type PageHeaderProps = {
   eyebrow?: string;
-  title: string;
-  description?: string;
+  title: ReactNode;
+  description?: ReactNode;
   backHref?: string;
   backLabel?: string;
   aside?: ReactNode;

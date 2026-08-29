@@ -2,6 +2,7 @@ import { ArrowRightIcon, CheckCircleIcon, InfoIcon, WarningCircleIcon } from "@p
 import Link from "next/link";
 import { epfoService } from "@/application/service-instance";
 import { PageHeader, PrototypeNotice, StatusBadge } from "@/components/ui";
+import { T } from "@/lib/i18n/t";
 import { humanizeState } from "@/lib/format";
 
 export const metadata = { title: "Manage account" };
@@ -23,12 +24,12 @@ export default function ManagePage() {
 
   return (
     <div className="page-shell">
-      <PageHeader eyebrow="Manage" title="Profile and PF records" description="Keep your identity, contact, bank, nomination, and employment information ready for online services." aside={<span className="uan-context tabular">{snapshot.member.uanMasked}</span>} />
+      <PageHeader eyebrow="Manage" title={<T id="manage.title" />} description="Keep your identity, contact, bank, nomination, and employment information ready for online services." aside={<span className="uan-context tabular">{snapshot.member.uanMasked}</span>} />
 
       <section className="completeness-meter panel" aria-label="Profile completeness" key={completedCount}>
         <div className="completeness-meter__head state-enter">
           <div>
-            <p className="record-label">Profile completeness</p>
+            <p className="record-label"><T id="manage.completeness" /></p>
             <p className="tabular"><strong>{completedCount}</strong> of {totalCount} complete</p>
           </div>
           <strong className="completeness-meter__percent tabular">{completenessPercent}%</strong>

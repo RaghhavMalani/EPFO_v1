@@ -7,6 +7,7 @@ import { redirect } from "next/navigation";
 import { epfoService } from "@/application/service-instance";
 import { ActionButton } from "@/components/action-button";
 import { PageHeader, PrototypeNotice } from "@/components/ui";
+import { T } from "@/lib/i18n/t";
 import { formatCurrency } from "@/lib/format";
 
 export const metadata = { title: "Review withdrawal" };
@@ -24,7 +25,7 @@ export default function ReviewPage() {
     <div className="page-shell page-shell--narrow">
       <PageHeader
         eyebrow="Final PF settlement · Form 19"
-        title="Review your synthetic claim"
+        title={<T id="withdraw.reviewTitle" />}
         description="Check the full-settlement amount and destination before explicitly confirming this synthetic submission."
         backHref="/withdraw/preflight"
         backLabel="Claim Preflight"

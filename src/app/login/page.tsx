@@ -1,7 +1,9 @@
 import { BuildingsIcon, IdentificationCardIcon, ShieldCheckIcon } from "@phosphor-icons/react/dist/ssr";
 import type { Metadata } from "next";
 import { Suspense } from "react";
+import { LanguageToggle } from "@/components/language-toggle";
 import { LoginCard } from "@/components/login-card";
+import { T } from "@/lib/i18n/t";
 
 export const metadata: Metadata = { title: "Sign in" };
 
@@ -9,17 +11,20 @@ export default function LoginPage() {
   return (
     <div className="login-shell">
       <div className="login-shell__inner">
+        <div className="login-language-toggle">
+          <LanguageToggle />
+        </div>
+
         <header className="login-hero">
           <span className="login-hero__mark" aria-hidden="true">E1</span>
-          <h1>EPFO ONE</h1>
-          <p>An independent, hackathon-built reimagining of member and employer PF services.</p>
+          <h1><T id="login.brand" /></h1>
+          <p><T id="login.subtitle" /></p>
         </header>
 
         <Suspense fallback={<div className="login-grid" aria-hidden="true" />}>
           <div className="login-grid">
             <LoginCard
               role="member"
-              badge="Member"
               name="Aarav Sharma"
               idLabel="UAN"
               idValue="100200304821"
@@ -27,7 +32,6 @@ export default function LoginPage() {
             />
             <LoginCard
               role="employer"
-              badge="Employer"
               name="Demo Systems Pvt Ltd"
               idLabel="Establishment ID"
               idValue="DL-DEM-2712"
@@ -39,7 +43,7 @@ export default function LoginPage() {
         <aside className="login-notice">
           <ShieldCheckIcon size={20} weight="fill" aria-hidden="true" />
           <p>
-            Independent hackathon prototype · Synthetic data only — never enter real credentials.
+            <T id="login.notice" />
           </p>
         </aside>
       </div>

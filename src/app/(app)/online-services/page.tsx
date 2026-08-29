@@ -2,6 +2,7 @@ import { ArrowRightIcon, InfoIcon } from "@phosphor-icons/react/dist/ssr";
 import Link from "next/link";
 import { epfoService } from "@/application/service-instance";
 import { PageHeader, PrototypeNotice } from "@/components/ui";
+import { T } from "@/lib/i18n/t";
 
 export const metadata = { title: "Online Services" };
 
@@ -41,7 +42,7 @@ export default function OnlineServicesPage() {
   const snapshot = epfoService.getSnapshot();
   return (
     <div className="page-shell">
-      <PageHeader eyebrow="Member" title="Online Services" description="Choose a service by outcome. Each available journey explains the form, readiness, and responsible party before you act." />
+      <PageHeader eyebrow="Member" title={<T id="onlineServices.title" />} description={<T id="onlineServices.description" />} />
       <div className="service-groups">
         {groups.map((group) => (
           <section key={group.title} className="service-group">
