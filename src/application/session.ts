@@ -4,7 +4,7 @@ import { ExperienceV2ApplicationService } from "@/application/experience-v2-serv
 import { AppStateSchema } from "@/domain/schemas";
 import { SESSION_COOKIE, SESSION_HEADER, isSessionId } from "@/lib/session";
 import { InMemoryEpfoRepository } from "@/repositories/in-memory-epfo-repository";
-import { sessionStore } from "@/repositories/session-store-instance";
+import { getSessionStore } from "@/repositories/session-store-instance";
 import type { SessionStore } from "@/repositories/session-store";
 
 export type SessionServices = {
@@ -82,14 +82,14 @@ async function hydrate(sessionId: string, readOnly: boolean, store: SessionStore
  */
 export async function loadSessionFor(
   sessionId: string,
-  store: SessionStore = sessionStore,
+  store: SessionStore = getSessionStore(),
 ): Promise<SessionServices> {
   const { services } = await hydrate(sessionId, true, store);
   return services;
 }
 
 /** Loads this visitor's scenario for rendering. */
-export async function loadSession(store: SessionStore = sessionStore): Promise<SessionServices> {
+export async function loadSession(store: SessionStore = getSessionStore()): Promise<SessionServices> {
   return loadSessionFor(await getSessionId(), store);
 }
 
@@ -102,7 +102,7 @@ export async function loadSession(store: SessionStore = sessionStore): Promise<S
 export async function mutateSessionFor<T>(
   sessionId: string,
   command: (services: SessionServices) => T,
-  store: SessionStore = sessionStore,
+  store: SessionStore = getSessionStore(),
 ): Promise<T> {
   const { repository, services } = await hydrate(sessionId, false, store);
 
@@ -117,12 +117,12 @@ export async function mutateSessionFor<T>(
 /** Runs one command against this visitor's scenario and persists the result. */
 export async function mutateSession<T>(
   command: (services: SessionServices) => T,
-  store: SessionStore = sessionStore,
+  store: SessionStore = getSessionStore(),
 ): Promise<T> {
   return mutateSessionFor(await getSessionId(), command, store);
 }
 
 /** Drops this visitor's scenario so their next request reseeds from the fixtures. */
-export async function clearSession(store: SessionStore = sessionStore): Promise<void> {
+export async function clearSession(store: SessionStore = getSessionStore()): Promise<void> {
   await store.clear(await getSessionId());
 }

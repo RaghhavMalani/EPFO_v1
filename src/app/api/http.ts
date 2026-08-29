@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
+import { SessionStoreConfigurationError } from "@/repositories/session-store-instance";
 
 export function apiError(error: unknown) {
   // A malformed command is a bad request, not a workflow conflict.
@@ -13,6 +14,16 @@ export function apiError(error: unknown) {
         })),
       },
       { status: 400, headers: noStoreHeaders },
+    );
+  }
+
+  // A deployment that cannot store sessions is broken, not in conflict. Say so with a
+  // 5xx and log it, rather than letting it read as a rejected workflow transition.
+  if (error instanceof SessionStoreConfigurationError) {
+    console.error(`[epfo-one] ${error.message}`);
+    return NextResponse.json(
+      { error: "This deployment is not configured for durable session storage." },
+      { status: 503, headers: noStoreHeaders },
     );
   }
 

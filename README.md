@@ -43,7 +43,7 @@ Experience V2 and flagship additions:
 - Hindi/English toggle across navigation and the full member journey's headline and label strings, persisted in `localStorage`
 - `/activity`: a full-page view of the deterministic event timeline
 - A print stylesheet and browser-native "Download statement" on `/passbook`
-- Over 150 deterministic domain, session, walkthrough, assistant, and storage tests, plus a 9-case Playwright suite
+- Over 160 deterministic domain, session, walkthrough, assistant, storage, and configuration tests, plus a 9-case Playwright suite
 
 ## Routes
 
@@ -130,7 +130,18 @@ Storage is a `SessionStore` with two drivers:
 | Driver | When | Notes |
 | --- | --- | --- |
 | `supabase` | `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` are set | One `demo_sessions` row per visitor, holding the whole scenario as `jsonb`. Reached with the service-role key from server code only, so RLS stays fully closed. |
-| `memory` | Neither is set | Correct for `next dev`, the tests, and a single-process `next start`. Logs a warning in production, because several serverless instances would each hold a different copy. |
+| `memory` | Not configured, outside production | Correct for `next dev`, the tests, and a single-process `next start`. |
+
+**Production requires the durable driver.** If `NODE_ENV` is `production` and either
+variable is missing, the app refuses to serve and says which one is absent, rather than
+falling back. The memory driver's failure mode is silent — several serverless instances
+each keep their own copy of the scenario, so visitors overwrite each other and progress
+disappears between requests, with nothing in the logs to explain it. Refusing to start
+is the only signal that arrives before a demo instead of during one.
+
+The driver resolves on first use, not at module load, so `next build` does not need
+deployment secrets to succeed and a misconfiguration surfaces per request with a
+message and a `503`.
 
 A session with no row yet — or one whose stored scenario no longer matches the schema,
 written by an older deployment — simply seeds from the fixtures. Nothing is written
@@ -216,12 +227,13 @@ events where one role's action becomes another's outcome.
 ## Environment
 
 None of these is needed to run locally — without them the app uses the in-process
-session driver, which is correct for a single process.
+session driver, which is correct for a single process. The two Supabase variables are
+**mandatory in production**: the app will not serve without them.
 
 | Variable | Required | Purpose |
 | --- | --- | --- |
-| `SUPABASE_URL` | Production | Supabase project URL for durable per-visitor session state. |
-| `SUPABASE_SERVICE_ROLE_KEY` | Production | Server-side key for the `demo_sessions` table. Never exposed to the browser. |
+| `SUPABASE_URL` | Production (enforced) | Supabase project URL for durable per-visitor session state. |
+| `SUPABASE_SERVICE_ROLE_KEY` | Production (enforced) | Server-side key for the `demo_sessions` table. Never exposed to the browser. |
 | `GROQ_API_KEY` | Optional | Enables the model-backed assistant. Without it, Ask EPFO One answers from the keyword classifier and says so. |
 
 The `demo_sessions` table already exists on the project; this is the migration that
