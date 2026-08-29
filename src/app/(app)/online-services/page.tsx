@@ -30,7 +30,8 @@ const groups = [
     description: "Maintain identity and benefit information.",
     services: [
       { title: "Profile and KYC details", detail: "Identity, Aadhaar, PAN, mobile, and bank", href: "/manage", status: "Available" },
-      { title: "e-Nomination", detail: "Nominee details · Prototype preview", status: "Preview" },
+      { title: "Pension & retirement projection", detail: "EPS estimate and compounding corpus projection", href: "/pension", status: "Available" },
+      { title: "e-Nomination", detail: "Add or update your nominee", href: "/manage/nomination", status: "Available" },
       { title: "Account correction", detail: "Route a correction to the right responsible party", href: "/manage", status: "Available" },
     ],
   },

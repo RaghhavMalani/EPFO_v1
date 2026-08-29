@@ -3,6 +3,7 @@ import Link from "next/link";
 import { epfoService, experienceV2Service } from "@/application/service-instance";
 import { PrototypeNotice } from "@/components/ui";
 import { contributionStatusLabel, selectFocusMonth, type PassbookMonth } from "@/domain/contribution-health";
+import { splitContribution } from "@/domain/contribution-split";
 import type { ContributionStatus } from "@/domain/experience-v2";
 import { formatAmount, formatCurrency, formatDate, formatMonth } from "@/lib/format";
 
@@ -96,6 +97,7 @@ function ExplanationPanel({ month }: { month: PassbookMonth }) {
   const { contribution, health } = month;
   const attention = isAttention(health.status);
   const label = formatMonth(contribution.month, "long");
+  const split = splitContribution(contribution.wageBasisPaise);
 
   return (
     <aside className={attention ? "explain-panel explain-panel--attention" : "explain-panel"} id="explain">
@@ -179,6 +181,27 @@ function ExplanationPanel({ month }: { month: PassbookMonth }) {
           </dd>
         </div>
       </dl>
+
+      <div className="explain-block">
+        <h3>Where does my money go?</h3>
+        <div className="split-bar" role="img" aria-label={`For ${label}, ${split.employeePfSharePercent}% is your PF share, ${split.employerPfSharePercent}% is the employer PF share, and ${split.employerEpsSharePercent}% is the employer EPS share`}>
+          <span className="split-bar__segment split-bar__segment--employee" style={{ width: `${split.employeePfShareOfTotalPercent}%` }} />
+          <span className="split-bar__segment split-bar__segment--employer" style={{ width: `${split.employerPfShareOfTotalPercent}%` }} />
+          <span className="split-bar__segment split-bar__segment--eps" style={{ width: `${split.employerEpsShareOfTotalPercent}%` }} />
+        </div>
+        <dl className="split-figures">
+          <div><span className="split-figures__key split-figures__key--employee" aria-hidden="true" />
+            <dt>Your PF share ({split.employeePfSharePercent}%)</dt><dd className="tabular">{formatCurrency(split.employeePfPaise)}</dd>
+          </div>
+          <div><span className="split-figures__key split-figures__key--employer" aria-hidden="true" />
+            <dt>Employer PF share ({split.employerPfSharePercent}%)</dt><dd className="tabular">{formatCurrency(split.employerPfPaise)}</dd>
+          </div>
+          <div><span className="split-figures__key split-figures__key--eps" aria-hidden="true" />
+            <dt>Employer EPS share ({split.employerEpsSharePercent}%)</dt><dd className="tabular">{formatCurrency(split.employerEpsPaise)}</dd>
+          </div>
+        </dl>
+        <p className="split-note">Synthetic illustration of EPFO&apos;s public formula shape based on this month&apos;s wage basis — a separate figure from the recorded ledger amounts above.</p>
+      </div>
 
       <Link href="/member" className="text-link text-link--flush">
         View employment record

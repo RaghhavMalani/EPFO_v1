@@ -1,6 +1,7 @@
 import { createAuditEvent, type AuditContext } from "@/domain/audit";
 import { transitionIssue } from "@/domain/issue-machine";
-import type { AppState } from "@/domain/schemas";
+import { validateNomineeShares, type NomineeInput } from "@/domain/nomination";
+import type { AppState, Nominee } from "@/domain/schemas";
 
 export class MemberSelfServiceAdapter {
   startMarkExit(state: AppState, issueId: string, context: AuditContext): AppState {
@@ -103,6 +104,45 @@ export class MemberSelfServiceAdapter {
           context,
         ),
         resolved.auditEvent,
+      ],
+    };
+  }
+
+  /** Saves the member's e-Nomination. Validation is deterministic: see `validateNomineeShares`. */
+  saveNomination(state: AppState, nomineeInputs: NomineeInput[], context: AuditContext): AppState {
+    const validation = validateNomineeShares(nomineeInputs);
+    if (!validation.valid) {
+      throw new Error(validation.issue ?? "The nomination could not be saved.");
+    }
+
+    const now = context.now().toISOString();
+    const nominees: Nominee[] = nomineeInputs.map((input, index) => ({
+      id: `nominee-${index + 1}`,
+      name: input.name.trim(),
+      relationship: input.relationship.trim(),
+      sharePercentage: input.sharePercentage,
+      dateOfBirth: input.dateOfBirth,
+    }));
+
+    return {
+      ...state,
+      member: {
+        ...state.member,
+        nomination: { status: "SAVED", nominees, updatedAt: now },
+      },
+      auditEvents: [
+        ...state.auditEvents,
+        createAuditEvent(
+          {
+            aggregateType: "NOMINATION",
+            aggregateId: state.member.id,
+            eventType: "NOMINATION_SAVED",
+            actorType: "CITIZEN",
+            actorName: state.member.name,
+            metadata: { nomineeCount: nominees.length },
+          },
+          context,
+        ),
       ],
     };
   }

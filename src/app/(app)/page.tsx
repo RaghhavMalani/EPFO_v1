@@ -15,6 +15,7 @@ const PF_SERVICES = [
   { title: "Withdraw PF", detail: "Final settlement under Form 19", href: "/withdraw" },
   { title: "Take an advance", detail: "Partial withdrawal for a specific purpose", href: "/advance" },
   { title: "Transfer PF", detail: "Consolidate a previous PF account", href: "/transfer" },
+  { title: "Plan for retirement", detail: "Pension estimate and corpus projection", href: "/pension" },
 ];
 
 const ACCOUNT_SERVICES = [
