@@ -8,6 +8,7 @@ import {
   createSessionId,
   isSessionId,
 } from "@/lib/session";
+import { TOUR_COOKIE, parseAcknowledgedIndex } from "@/lib/tour";
 
 /**
  * Next.js 16 renamed the `middleware.ts` convention to `proxy.ts` (same runtime,
@@ -65,6 +66,24 @@ export function proxy(request: NextRequest) {
 
   const isEmployerRoute = pathname === "/employer" || pathname.startsWith("/employer/");
   const isSharedRoute = pathname === "/demo";
+
+  // Judge Mode intentionally crosses the published member and employer personas.
+  // A shared employer-request link is part of that script, but it does not call the
+  // tour command route first, so ordinary role gating used to bounce the judge home
+  // and strand the walkthrough at 6/7. While the tour cookie is valid, the requested
+  // product route is authoritative: allow it and keep the cosmetic role cookie in
+  // sync for the next request. Outside the tour, the normal gates below are unchanged.
+  const isTourActive = parseAcknowledgedIndex(request.cookies.get(TOUR_COOKIE)?.value) !== null;
+  if (isTourActive && !isSharedRoute) {
+    const response = next();
+    response.cookies.set(ROLE_COOKIE, isEmployerRoute ? "employer" : "member", {
+      httpOnly: true,
+      sameSite: "lax",
+      path: "/",
+      maxAge: 60 * 60 * 8,
+    });
+    return response;
+  }
 
   if (isEmployerRoute && role !== "employer") {
     return redirect(new URL(ROLE_HOME[role], request.url));
