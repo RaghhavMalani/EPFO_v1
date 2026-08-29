@@ -1,12 +1,13 @@
 import { CalendarCheckIcon, CheckCircleIcon, IdentificationCardIcon } from "@phosphor-icons/react/dist/ssr";
-import { epfoService } from "@/application/service-instance";
+import { loadSession } from "@/application/session";
 import { ActionButton } from "@/components/action-button";
 import { LinkButton, PageHeader, PrototypeNotice, StatusBadge } from "@/components/ui";
 import { formatDate } from "@/lib/format";
 
 export const metadata = { title: "Mark Date of Exit" };
 
-export default function MarkExitPage() {
+export default async function MarkExitPage() {
+  const { epfoService } = await loadSession();
   const snapshot = epfoService.getSnapshot();
   const issue = snapshot.issues.find((candidate) => candidate.type === "MISSING_EXIT_DATE")!;
   const employment = snapshot.member.employments.find((record) => record.id === issue.relatedEmploymentId)!;

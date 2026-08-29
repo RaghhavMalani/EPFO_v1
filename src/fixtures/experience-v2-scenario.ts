@@ -67,7 +67,7 @@ function contribution(
     explanation: isMarch
       ? "The employee share and EPS are present, but the expected employer EPF contribution is missing."
       : postingStatus === "RECONCILED"
-        ? "This contribution was corrected and reconciled with the synthetic employer record."
+        ? "This contribution was corrected and reconciled against the employer record."
         : postingStatus === "DELAYED"
           ? "The employer posted this month after the expected posting date."
           : "The contribution is posted and matches the deterministic wage rule.",
@@ -177,9 +177,9 @@ export function createExperienceV2Scenario(member: Member): ExperienceV2State {
       amountPaise: transferSource.pfBalancePaise,
       state: "DRAFT",
       checks: [
-        { id: "SAME_UAN", label: "Same UAN", status: "PASS", explanation: "Both synthetic member records use the same masked UAN." },
-        { id: "PREVIOUS_EXIT", label: "Previous Date of Exit", status: "PASS", explanation: "The previous employment exit is recorded in the synthetic PF record." },
-        { id: "TARGET_EMPLOYMENT", label: "Receiving record linked", status: "PASS", explanation: "Demo Systems Pvt Ltd is linked to the same synthetic UAN." },
+        { id: "SAME_UAN", label: "Same UAN", status: "PASS", explanation: "Both member records sit under the same UAN." },
+        { id: "PREVIOUS_EXIT", label: "Previous Date of Exit", status: "PASS", explanation: "The previous employment has a recorded Date of Exit." },
+        { id: "TARGET_EMPLOYMENT", label: "Receiving record linked", status: "PASS", explanation: "Your current employer is linked to the same UAN." },
         { id: "IDENTITY", label: "Identity verified", status: "PASS", explanation: "Identity is verified." },
         { id: "BANK", label: "Bank verified", status: "PASS", explanation: "The masked bank account is verified." },
         { id: "PREVIOUS_RECORD", label: "Previous service record correction", status: "BLOCK", explanation: "The previous employer must align the service record before submission." },

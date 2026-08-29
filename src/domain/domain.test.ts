@@ -65,8 +65,11 @@ describe("EPFO One deterministic domain", () => {
       title: "Bank details need verification",
     };
     const route = routeResolution(bankIssue, state.member);
+    // Assert the routing decision itself rather than its wording: bank seeding must
+    // stay on the self-service path and must never hand ownership to the employer.
     expect(route.resolutionType).toBe("SELF_SERVICE");
-    expect(route.explanation).toContain("Employer approval is not part");
+    expect(route.nextState).toBe("ACTION_REQUIRED");
+    expect(route.responsibleParty).not.toContain(state.employer.name);
   });
 
   it("routes an Aadhaar-validated profile correction to self-service", () => {

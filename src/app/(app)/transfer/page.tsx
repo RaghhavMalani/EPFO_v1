@@ -1,6 +1,6 @@
 import { ArrowRightIcon, CheckIcon, WarningCircleIcon } from "@phosphor-icons/react/dist/ssr";
-import { epfoService, experienceV2Service } from "@/application/service-instance";
-import { LinkButton, PageHeader, PrototypeNotice } from "@/components/ui";
+import { loadSession } from "@/application/session";
+import { DemoBadge, LinkButton, PageHeader, PrototypeNotice } from "@/components/ui";
 import { StateSequenceMap } from "@/components/state-sequence-map";
 import { TransferActionButton } from "@/components/transfer-form";
 import { TRANSFER_SEQUENCE } from "@/domain/transfer-machine";
@@ -20,7 +20,8 @@ const SEQUENCE_LABELS: Record<TransferState, string> = {
   COMPLETED: "Completed",
 };
 
-export default function TransferPage() {
+export default async function TransferPage() {
+  const { epfoService, experienceV2Service } = await loadSession();
   const { transfer } = experienceV2Service.getExperience();
   const { member } = epfoService.getSnapshot();
   const source = member.employments.find((record) => record.id === transfer.previousEmploymentId);
@@ -80,7 +81,7 @@ export default function TransferPage() {
 
       <section className="preflight-columns">
         <div className="check-list">
-          <h2>Deterministic transfer checks</h2>
+          <h2>Transfer readiness</h2>
           <ul>
             {transfer.checks.map((check) => (
               <li key={check.id} className={check.status === "PASS" ? "check-line check-line--done" : "check-line check-line--open"}>
@@ -103,13 +104,13 @@ export default function TransferPage() {
                 </div>
               </div>
               <div className="mt-4">
-                <TransferActionButton action="RESOLVE_BLOCKER" label="Resolve blocker (previous employer, synthetic)" />
+                <TransferActionButton action="RESOLVE_BLOCKER" label="Request employer correction" />
               </div>
             </article>
           ) : transfer.state === "READY" ? (
             <div className="panel p-6">
               <h2 className="section-title">Ready to submit</h2>
-              <p className="mt-2 text-sm leading-6 text-[var(--muted)]">All deterministic checks pass. Submitting moves this transfer to EPFO for processing.</p>
+              <p className="mt-2 text-sm leading-6 text-[var(--muted)]">Every readiness check passes. Submitting moves this transfer to EPFO for processing.</p>
               <div className="mt-5">
                 <TransferActionButton action="ADVANCE" label="Submit transfer request" />
               </div>
@@ -128,10 +129,11 @@ export default function TransferPage() {
             <div className="panel p-6">
               <h2 className="section-title">{SEQUENCE_LABELS[transfer.state]}</h2>
               <p className="mt-2 text-sm leading-6 text-[var(--muted)]">
-                This synthetic transfer is progressing through EPFO&apos;s deterministic stages. Advance it forward to see the next stage.
+                Your transfer is moving through EPFO&apos;s processing stages.
               </p>
-              <div className="mt-5">
-                <TransferActionButton action="ADVANCE" label="Simulate next processing stage (demo)" variant="secondary" />
+              <div className="mt-5 flex flex-wrap items-center gap-3">
+                <TransferActionButton action="ADVANCE" label="Advance to next stage" variant="secondary" />
+                <DemoBadge />
               </div>
             </div>
           )}

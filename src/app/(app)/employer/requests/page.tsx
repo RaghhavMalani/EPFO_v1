@@ -1,12 +1,13 @@
 import { ArrowRightIcon } from "@phosphor-icons/react/dist/ssr";
 import Link from "next/link";
-import { epfoService } from "@/application/service-instance";
+import { loadSession } from "@/application/session";
 import { PageHeader, StatusBadge } from "@/components/ui";
 import { formatDateTime } from "@/lib/format";
 
 export const metadata = { title: "Employer requests" };
 
 export default async function EmployerRequestsPage({ searchParams }: { searchParams: Promise<{ status?: string }> }) {
+  const { epfoService } = await loadSession();
   const snapshot = epfoService.getSnapshot();
   const { status = "all" } = await searchParams;
   const actionable = snapshot.employerRequests.filter((request) => request.status === "AWAITING_REVIEW" || request.status === "IN_REVIEW").length;

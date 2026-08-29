@@ -7,7 +7,7 @@ import {
   WarningCircleIcon,
 } from "@phosphor-icons/react/dist/ssr";
 import Link from "next/link";
-import { epfoService, experienceV2Service } from "@/application/service-instance";
+import { loadSession } from "@/application/session";
 import { PageHeader, PrototypeNotice, StatusBadge } from "@/components/ui";
 import { formatCurrency, formatDateTime, formatMonth, humanizeState } from "@/lib/format";
 
@@ -22,7 +22,8 @@ const ECR_STATE_TONE: Record<string, string> = {
   PAID: "status-badge--success",
 };
 
-export default function EmployerPage() {
+export default async function EmployerPage() {
+  const { epfoService, experienceV2Service } = await loadSession();
   const snapshot = epfoService.getSnapshot();
   const experience = experienceV2Service.getExperience();
 

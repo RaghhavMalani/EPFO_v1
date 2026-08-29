@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { epfoService } from "@/application/service-instance";
+import { mutateSession } from "@/application/session";
 import { apiError, noStoreHeaders } from "@/app/api/http";
 
 const IssueActionBody = z.object({
@@ -19,15 +19,16 @@ export async function POST(
   try {
     const { issueId } = await params;
     const body = IssueActionBody.parse(await request.json());
-    const handlers = {
-      START_MARK_EXIT: () => epfoService.startMarkExit(issueId),
-      COMPLETE_MARK_EXIT: () => epfoService.completeMarkExit(issueId),
-      CREATE_EMPLOYER_REQUEST: () => epfoService.createEmployerRequest(issueId),
-      RESUBMIT_EMPLOYER_REQUEST: () => epfoService.resubmitEmployerRequest(issueId),
-    } satisfies Record<typeof body.action, () => unknown>;
-    return NextResponse.json(handlers[body.action](), {
-      headers: noStoreHeaders,
+    const snapshot = await mutateSession(({ epfoService }) => {
+      const handlers = {
+        START_MARK_EXIT: () => epfoService.startMarkExit(issueId),
+        COMPLETE_MARK_EXIT: () => epfoService.completeMarkExit(issueId),
+        CREATE_EMPLOYER_REQUEST: () => epfoService.createEmployerRequest(issueId),
+        RESUBMIT_EMPLOYER_REQUEST: () => epfoService.resubmitEmployerRequest(issueId),
+      } satisfies Record<typeof body.action, () => unknown>;
+      return handlers[body.action]();
     });
+    return NextResponse.json(snapshot, { headers: noStoreHeaders });
   } catch (error) {
     return apiError(error);
   }

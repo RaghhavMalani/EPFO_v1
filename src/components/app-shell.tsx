@@ -23,6 +23,7 @@ function isCurrent(pathname: string, href: string) {
 }
 
 export type MemberIdentity = { name: string; uanMasked: string };
+export type EmployerIdentity = { name: string; establishmentIdMasked: string };
 
 function SignOutButton() {
   const router = useRouter();
@@ -48,7 +49,7 @@ function SignOutButton() {
   );
 }
 
-export function AppHeader({ member }: { member: MemberIdentity }) {
+export function AppHeader({ member, employer }: { member: MemberIdentity; employer: EmployerIdentity }) {
   const pathname = usePathname();
   const t = useTranslation();
   const isEmployer = pathname.startsWith("/employer");
@@ -76,7 +77,7 @@ export function AppHeader({ member }: { member: MemberIdentity }) {
             <div className="identity-meta">
               {isEmployer ? (
                 <>
-                  <div><strong>Demo Systems Pvt Ltd</strong><span>Establishment ID · DLCPM••••6789</span></div>
+                  <div><strong>{employer.name}</strong><span>Establishment ID · {employer.establishmentIdMasked}</span></div>
                   <SignOutButton />
                 </>
               ) : (

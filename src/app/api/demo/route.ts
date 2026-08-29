@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { epfoService } from "@/application/service-instance";
+import { mutateSession } from "@/application/session";
 import { apiError, noStoreHeaders } from "@/app/api/http";
 import type { ClaimState } from "@/domain/schemas";
 
@@ -28,14 +28,19 @@ const claimActionTargets: Partial<Record<z.infer<typeof DemoActionBody>["action"
 export async function POST(request: Request) {
   try {
     const { action } = DemoActionBody.parse(await request.json());
-    if (action === "RESET") {
-      return NextResponse.json(epfoService.reset(), { headers: noStoreHeaders });
-    }
-    const target = claimActionTargets[action];
-    if (!target) {
-      throw new Error("Unknown demo action.");
-    }
-    return NextResponse.json(epfoService.advanceClaim(target), { headers: noStoreHeaders });
+    // A reset rewrites this visitor's own scenario back to the fixtures. It is scoped
+    // to their session, so resetting mid-demo cannot disturb anyone else's run.
+    const snapshot = await mutateSession(({ epfoService }) => {
+      if (action === "RESET") {
+        return epfoService.reset();
+      }
+      const target = claimActionTargets[action];
+      if (!target) {
+        throw new Error("Unknown demo action.");
+      }
+      return epfoService.advanceClaim(target);
+    });
+    return NextResponse.json(snapshot, { headers: noStoreHeaders });
   } catch (error) {
     return apiError(error);
   }

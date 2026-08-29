@@ -1,4 +1,5 @@
 import { AppStateSchema, MemberSchema, type AppState } from "@/domain/schemas";
+import { EMPLOYER_IDENTITY, MEMBER_IDENTITY } from "@/fixtures/demo-identities";
 import { createExperienceV2Scenario } from "@/fixtures/experience-v2-scenario";
 
 const CREATED_AT = "2026-08-26T05:01:00.000Z";
@@ -7,8 +8,8 @@ export function createSyntheticScenario(): AppState {
   const scenario = {
     member: {
       id: "member-aarav",
-      name: "Aarav Sharma",
-      uanMasked: "DEMO-XXXX-4821",
+      name: MEMBER_IDENTITY.name,
+      uanMasked: MEMBER_IDENTITY.uanMasked,
       currentPfBalancePaise: 32_040_000,
       requestedWithdrawalPaise: 32_040_000,
       employmentStatus: "NOT_EMPLOYED_IN_PF_ESTABLISHMENT",
@@ -101,9 +102,9 @@ export function createSyntheticScenario(): AppState {
     },
     employer: {
       id: "employer-demo-systems",
-      name: "Demo Systems Pvt Ltd",
-      establishmentIdMasked: "DL/DEM/•••••/2712",
-      pfOffice: "Delhi Central · Simulation",
+      name: EMPLOYER_IDENTITY.name,
+      establishmentIdMasked: EMPLOYER_IDENTITY.establishmentIdMasked,
+      pfOffice: EMPLOYER_IDENTITY.pfOffice,
     },
     issues: [
       {

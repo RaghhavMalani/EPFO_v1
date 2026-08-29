@@ -1,7 +1,12 @@
 import { NextResponse } from "next/server";
-import { epfoService } from "@/application/service-instance";
-import { noStoreHeaders } from "@/app/api/http";
+import { loadSession } from "@/application/session";
+import { apiError, noStoreHeaders } from "@/app/api/http";
 
 export async function GET() {
-  return NextResponse.json(epfoService.getSnapshot(), { headers: noStoreHeaders });
+  try {
+    const { epfoService } = await loadSession();
+    return NextResponse.json(epfoService.getSnapshot(), { headers: noStoreHeaders });
+  } catch (error) {
+    return apiError(error);
+  }
 }

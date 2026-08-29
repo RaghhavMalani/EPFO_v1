@@ -60,7 +60,7 @@ test("the login screen gates every route and accepts only the demo password", as
   const memberCard = page.locator('form[aria-labelledby="login-card-member-name"]');
   await memberCard.getByLabel("Password").fill("wrong-password");
   await memberCard.getByRole("button", { name: /Sign in as/ }).click();
-  await expect(page.getByRole("alert")).toContainText("Incorrect password");
+  await expect(memberCard.getByRole("alert")).toContainText("Incorrect password");
 
   await memberCard.getByRole("button", { name: "Use demo credentials" }).click();
   await memberCard.getByRole("button", { name: /Sign in as/ }).click();
@@ -183,7 +183,12 @@ test("member logs in, resolves both blockers, employer approves, and the claim i
 
   await page.locator(".action-item").getByRole("link", { name: "Resolve this check" }).click();
   await page.getByRole("button", { name: "Send synthetic request" }).click();
-  const requestUrl = page.url();
+  // The member's issue page links to the shared request; that employer-side URL is what
+  // crosses the role boundary. The member's own /issues/* URL would bounce an employer.
+  const sharedRequestLink = page.getByRole("link", { name: "View shared request" });
+  await expect(sharedRequestLink).toBeVisible();
+  const requestUrl = (await sharedRequestLink.getAttribute("href")) ?? "";
+  expect(requestUrl).toMatch(/^\/employer\/requests\//);
 
   // Switch personas the way the two-portal demo intends: sign out of member, into employer.
   await signOutViaUi(page);

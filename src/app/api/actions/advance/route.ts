@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { experienceV2Service } from "@/application/service-instance";
+import { mutateSession, type SessionServices } from "@/application/session";
 import { apiError, noStoreHeaders } from "@/app/api/http";
 import { AdvanceGoalSchema, AdvanceStateSchema } from "@/domain/experience-v2";
 
@@ -15,7 +15,10 @@ const AdvanceActionBody = z.discriminatedUnion("action", [
   z.object({ action: z.literal("ADVANCE") }),
 ]);
 
-function runAdvanceAction(body: z.infer<typeof AdvanceActionBody>) {
+function runAdvanceAction(
+  { experienceV2Service }: SessionServices,
+  body: z.infer<typeof AdvanceActionBody>,
+) {
   switch (body.action) {
     case "SELECT_GOAL":
       return experienceV2Service.setAdvanceGoal(body.goal, body.requestedAmountPaise ?? 0);
@@ -31,7 +34,8 @@ function runAdvanceAction(body: z.infer<typeof AdvanceActionBody>) {
 export async function POST(request: Request) {
   try {
     const body = AdvanceActionBody.parse(await request.json());
-    return NextResponse.json(runAdvanceAction(body), { headers: noStoreHeaders });
+    const result = await mutateSession((services) => runAdvanceAction(services, body));
+    return NextResponse.json(result, { headers: noStoreHeaders });
   } catch (error) {
     return apiError(error);
   }

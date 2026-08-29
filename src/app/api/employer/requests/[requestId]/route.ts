@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { epfoService } from "@/application/service-instance";
+import { mutateSession } from "@/application/session";
 import { apiError, noStoreHeaders } from "@/app/api/http";
 
 const EmployerDecisionBody = z.discriminatedUnion("action", [
@@ -18,14 +18,14 @@ export async function POST(
   try {
     const { requestId } = await params;
     const body = EmployerDecisionBody.parse(await request.json());
-    return NextResponse.json(
+    const snapshot = await mutateSession(({ epfoService }) =>
       epfoService.actOnEmployerRequest(
         requestId,
         body.action,
         "reason" in body ? body.reason : undefined,
       ),
-      { headers: noStoreHeaders },
     );
+    return NextResponse.json(snapshot, { headers: noStoreHeaders });
   } catch (error) {
     return apiError(error);
   }

@@ -1,10 +1,11 @@
 import { NextResponse } from "next/server";
-import { epfoService } from "@/application/service-instance";
+import { mutateSession } from "@/application/session";
 import { apiError, noStoreHeaders } from "@/app/api/http";
 
 export async function POST() {
   try {
-    return NextResponse.json(epfoService.completePreflight(), { headers: noStoreHeaders });
+    const snapshot = await mutateSession(({ epfoService }) => epfoService.completePreflight());
+    return NextResponse.json(snapshot, { headers: noStoreHeaders });
   } catch (error) {
     return apiError(error);
   }

@@ -5,7 +5,7 @@ import {
   ConfettiIcon,
 } from "@phosphor-icons/react/dist/ssr";
 import { notFound } from "next/navigation";
-import { epfoService } from "@/application/service-instance";
+import { loadSession } from "@/application/session";
 import { CLAIM_SEQUENCE } from "@/domain/claim-machine";
 import { CLAIM_STEP_CONTENT } from "@/domain/claim-timeline";
 import { LinkButton, PageHeader } from "@/components/ui";
@@ -15,6 +15,7 @@ export const metadata = { title: "Claim timeline" };
 
 export default async function ClaimPage({ params }: { params: Promise<{ claimId: string }> }) {
   const { claimId } = await params;
+  const { epfoService } = await loadSession();
   const snapshot = epfoService.getSnapshot();
   if (snapshot.claim.id !== claimId) {
     notFound();

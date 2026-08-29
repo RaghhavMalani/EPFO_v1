@@ -1,6 +1,6 @@
 import { ArrowRightIcon, CheckCircleIcon, ClockIcon } from "@phosphor-icons/react/dist/ssr";
 import Link from "next/link";
-import { epfoService, experienceV2Service } from "@/application/service-instance";
+import { loadSession } from "@/application/session";
 import { LinkButton, PageHeader, PrototypeNotice } from "@/components/ui";
 import { CLAIM_SEQUENCE } from "@/domain/claim-machine";
 import { CLAIM_STEP_CONTENT } from "@/domain/claim-timeline";
@@ -10,7 +10,8 @@ export const metadata = { title: "Claim centre" };
 
 const TYPE_LABELS = { FORM_19: "Final settlement", FORM_31: "PF advance" } as const;
 
-export default function ClaimsIndexPage() {
+export default async function ClaimsIndexPage() {
+  const { epfoService, experienceV2Service } = await loadSession();
   const snapshot = epfoService.getSnapshot();
   const experience = experienceV2Service.getExperience();
   const { claim } = snapshot;

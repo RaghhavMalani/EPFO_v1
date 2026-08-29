@@ -1,6 +1,6 @@
 import { ArrowRightIcon, CheckCircleIcon, InfoIcon } from "@phosphor-icons/react/dist/ssr";
 import { notFound } from "next/navigation";
-import { epfoService } from "@/application/service-instance";
+import { loadSession } from "@/application/session";
 import { ActionButton } from "@/components/action-button";
 import { EmployerDecisionForm } from "@/components/employer-decision-form";
 import { PageHeader, PrototypeNotice, StatusBadge } from "@/components/ui";
@@ -10,6 +10,7 @@ export const metadata = { title: "Employer request detail" };
 
 export default async function EmployerRequestPage({ params }: { params: Promise<{ requestId: string }> }) {
   const { requestId } = await params;
+  const { epfoService } = await loadSession();
   const snapshot = epfoService.getSnapshot();
   const request = snapshot.employerRequests.find((candidate) => candidate.id === requestId);
   if (!request) notFound();

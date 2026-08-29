@@ -1,5 +1,5 @@
 import { CheckCircleIcon } from "@phosphor-icons/react/dist/ssr";
-import { epfoService } from "@/application/service-instance";
+import { loadSession } from "@/application/session";
 import { ActionButton } from "@/components/action-button";
 import { PageHeader, PrototypeNotice } from "@/components/ui";
 import { T } from "@/lib/i18n/t";
@@ -7,7 +7,8 @@ import { formatCurrency } from "@/lib/format";
 
 export const metadata = { title: "Final PF settlement" };
 
-export default function WithdrawPage() {
+export default async function WithdrawPage() {
+  const { epfoService } = await loadSession();
   const { member, withdrawalService } = epfoService.getSnapshot();
   return (
     <div className="page-shell page-shell--narrow">
@@ -18,7 +19,7 @@ export default function WithdrawPage() {
           <dl className="claim-start__facts">
             <div><dt>Claim type</dt><dd>Form 19</dd></div>
             <div><dt>Employment status</dt><dd>Not currently PF-covered</dd></div>
-            <div><dt>Checks required</dt><dd>Seven deterministic checks</dd></div>
+            <div><dt>Checks required</dt><dd>Seven checks</dd></div>
           </dl>
           <div className="claim-start__action"><ActionButton endpoint="/api/actions/preflight" body={{}} successHref="/withdraw/preflight" showArrow>Run seven readiness checks</ActionButton><p>{withdrawalService.explanation} AI does not decide eligibility or amounts.</p></div>
         </section>

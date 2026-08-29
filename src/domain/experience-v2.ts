@@ -172,12 +172,20 @@ export const PastClaimSchema = z.object({
   state: z.literal("CREDITED"),
 });
 
+export const AssistantSuggestedStepSchema = z.object({
+  label: z.string(),
+  href: z.string(),
+});
+
 export const AssistantResponseSchema = z.object({
   intent: z.string(),
   likelyService: z.string(),
   relevantAccountFacts: z.array(z.string()),
   missingInformation: z.array(z.string()),
   explanation: z.string(),
+  suggestedNextStep: AssistantSuggestedStepSchema.nullable(),
+  /** Which path produced this answer. Surfaced in the UI rather than hidden. */
+  source: z.enum(["MODEL", "DETERMINISTIC"]),
 });
 
 export const ExperienceV2StateSchema = z.object({
