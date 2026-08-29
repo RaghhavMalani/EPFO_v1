@@ -43,7 +43,7 @@ Experience V2 and flagship additions:
 - Hindi/English toggle across navigation and the full member journey's headline and label strings, persisted in `localStorage`
 - `/activity`: a full-page view of the deterministic event timeline
 - A print stylesheet and browser-native "Download statement" on `/passbook`
-- Over 125 deterministic domain, session, and walkthrough tests
+- Over 140 deterministic domain, session, walkthrough, and assistant tests
 
 ## Routes
 
@@ -171,6 +171,25 @@ To run the Playwright end-to-end happy path (requires a browser install; skips g
 npm run test:e2e
 ```
 
+## Ask EPFO One
+
+Member Home opens with **What are you trying to do?** — a plain-language way in, in
+English or Hindi. It is not a chat surface: it takes one question and answers with a
+routed service, the facts from the record that bear on it, and a link.
+
+The split matters more than the feature. A Groq-hosted `openai/gpt-oss-20b` does two
+things and only two: it picks one of eight intents, and it writes the explanation. It
+is explicitly instructed never to state an amount, an eligibility verdict, a readiness
+score, or a date — and it structurally cannot, because those are resolved *after*
+classification by the same deterministic engines the rest of the product uses.
+
+So the worst a wrong or hallucinated classification can do is open the wrong real
+screen. It cannot invent a balance.
+
+Every reply is validated against a Zod schema. If the model is unconfigured, slow
+(6s timeout), non-200, or returns anything that does not validate, a keyword classifier
+answers instead — and the UI says which path was taken rather than hiding it.
+
 ## Guided walkthrough
 
 `/login` opens with **Experience EPFO One** — a two-minute, six-step walkthrough that
@@ -196,13 +215,14 @@ events where one role's action becomes another's outcome.
 
 ## Environment
 
-Neither variable is needed to run locally — without them the app uses the in-process
+None of these is needed to run locally — without them the app uses the in-process
 session driver, which is correct for a single process.
 
 | Variable | Required | Purpose |
 | --- | --- | --- |
 | `SUPABASE_URL` | Production | Supabase project URL for durable per-visitor session state. |
 | `SUPABASE_SERVICE_ROLE_KEY` | Production | Server-side key for the `demo_sessions` table. Never exposed to the browser. |
+| `GROQ_API_KEY` | Optional | Enables the model-backed assistant. Without it, Ask EPFO One answers from the keyword classifier and says so. |
 
 The table the Supabase driver expects:
 

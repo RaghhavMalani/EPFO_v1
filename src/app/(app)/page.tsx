@@ -6,6 +6,7 @@ import {
 } from "@phosphor-icons/react/dist/ssr";
 import Link from "next/link";
 import { loadSession } from "@/application/session";
+import { AskEpfoOne } from "@/components/ask-epfo-one";
 import { LinkButton, PrototypeNotice } from "@/components/ui";
 import { buildMemberActivity, type ActivityTone } from "@/domain/activity-feed";
 import { contributionStatusLabel, selectPassbookHighlights } from "@/domain/contribution-health";
@@ -50,6 +51,8 @@ export default async function HomePage() {
         </div>
         <LinkButton href="/online-services"><T id="home.openServices" /></LinkButton>
       </header>
+
+      <AskEpfoOne />
 
       <section className="account-band" aria-label="Provident fund position">
         <div className="account-band__balance">
