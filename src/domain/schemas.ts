@@ -25,7 +25,8 @@ export const MemberSchema = z.object({
   id: z.string(),
   name: z.string(),
   uanMasked: z.string(),
-  currentPfBalancePaise: z.number().int().positive(),
+  // A fully drawn-down synthetic account is legitimate, so zero is allowed.
+  currentPfBalancePaise: z.number().int().nonnegative(),
   requestedWithdrawalPaise: z.number().int().positive(),
   employmentStatus: z.literal("NOT_EMPLOYED_IN_PF_ESTABLISHMENT"),
   identity: z.object({

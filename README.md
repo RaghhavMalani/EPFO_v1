@@ -21,7 +21,15 @@ No screen connects to EPFO, government APIs, employers, Aadhaar, PAN services, b
 - Guarded issue, employer-request, claim, and payment state machines
 - Explicit claim confirmation and a detailed timeline through simulated bank credit
 - Typed in-memory repository with Zod runtime validation and audit events
-- Fourteen deterministic domain tests
+
+Experience V2 deterministic foundation:
+
+- Passbook contribution ledger with a `POSTED` / `DELAYED` / `MISMATCH` / `MISSING` / `RECONCILED` health engine
+- Form 31 advance policy for medical, marriage, education, and housing purposes
+- Form 13 transfer state machine across eight guarded states, each emitting an audit event
+- Employer ECR payroll parser, five-code validation engine, and a `DRAFT` to `PAID` state machine
+- A completed employer ECR payment posts the member's contribution and moves the shared PF balance
+- Eighty-six deterministic domain tests
 
 ## Routes
 
@@ -42,6 +50,14 @@ Employer routes:
 - `/employer/requests` Request inbox
 - `/employer/requests/[requestId]` Request comparison, context, decision, and history
 
+Command and read routes:
+
+- `POST /api/actions/advance` Form 31 goal selection, submission, and processing states
+- `POST /api/actions/transfer` Form 13 blocker resolution and state progression
+- `POST /api/employer/ecr/[ecrId]` ECR validation, row correction, challan, and payment
+- `GET /api/experience` Experience V2 read model, including the derived passbook summary
+- `GET /api/state` Full synthetic application state
+
 The `/demo` route can reset the scenario and advance the post-submission processing states. Record corrections themselves only occur through the member and employer product flows.
 
 ## Architecture
@@ -49,6 +65,7 @@ The `/demo` route can reset the scenario and advance the post-submission process
 ```text
 src/
   domain/          Schemas, preflight, routing, readiness, state machines, timeline
+                   Contribution health, advance policy, transfer, and ECR engines
   fixtures/        Aarav Sharma and Demo Systems synthetic scenario
   repositories/    Repository contract, in-memory implementation, singleton
   adapters/        Member self-service, employer workflow, claim processor

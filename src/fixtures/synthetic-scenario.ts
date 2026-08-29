@@ -27,6 +27,24 @@ export function createSyntheticScenario(): AppState {
       },
       employments: [
         {
+          // An old PF account that was never consolidated. Its balance sits outside
+          // `currentPfBalancePaise` until the synthetic Form 13 transfer completes.
+          id: "employment-demo-logistics",
+          memberRecordLabel: "MID-•••-0461",
+          employerName: "Demo Logistics Pvt Ltd",
+          employmentStart: "2017-05-02",
+          employmentEnd: "2019-03-25",
+          isCurrent: false,
+          pfRecordStatus: "CLOSED",
+          exitStatus: "VERIFIED",
+          pfRecordExitDate: "2019-03-25",
+          pfBalancePaise: 4_120_000,
+          transferredAmountPaise: 0,
+          transferStatus: "NOT_TRANSFERRED",
+          legacyRecordStatus: "ALIGNED",
+          serviceEndReason: "RESIGNATION",
+        },
+        {
           id: "employment-demo-retail",
           memberRecordLabel: "MID-•••-1024",
           employerName: "Demo Retail Services Pvt Ltd",

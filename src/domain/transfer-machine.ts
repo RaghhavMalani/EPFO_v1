@@ -11,6 +11,12 @@ export const TRANSFER_SEQUENCE: TransferState[] = [
   "COMPLETED",
 ];
 
+export function nextTransferState(state: TransferState): TransferState | null {
+  const index = TRANSFER_SEQUENCE.indexOf(state);
+  if (index === -1) return null;
+  return TRANSFER_SEQUENCE[index + 1] ?? null;
+}
+
 export function transitionTransfer(
   transfer: TransferApplication,
   nextState: TransferState,

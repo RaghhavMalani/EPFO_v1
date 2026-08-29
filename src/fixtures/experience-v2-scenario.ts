@@ -1,11 +1,15 @@
 import { evaluateAdvancePolicy } from "@/domain/advance-policy";
 import { expectedContributionFromWage } from "@/domain/contribution-health";
-import type { EcrRow, ExperienceV2State } from "@/domain/experience-v2";
+import { deriveEcrValidationState } from "@/domain/ecr-machine";
+import { calculateEcrTotal, validateEcrRows, type RawSyntheticPayrollRow } from "@/domain/ecr-engine";
+import type { Contribution, ExperienceV2State } from "@/domain/experience-v2";
 import type { Member } from "@/domain/schemas";
 
 const CREATED_AT = "2026-08-26T05:01:00.000Z";
 const EMPLOYER_ID = "employer-demo-systems";
 const EMPLOYMENT_ID = "employment-demo-systems";
+const TRANSFER_SOURCE_EMPLOYMENT_ID = "employment-demo-logistics";
+export const WAGE_BASIS_PAISE = 1_800_000;
 
 const PEOPLE = [
   "Riya Mehta", "Arjun Verma", "Meera Shah", "Vikram Nair", "Aarav Sharma",
@@ -20,12 +24,22 @@ const PEOPLE = [
   "Sia Anand", "Reyansh Rao", "Navya Mistry", "Aarohi Nair", "Krish Balan",
 ];
 
+/** Row indices in `PEOPLE` that carry a deliberately seeded ECR defect. */
+export const SEEDED_ECR_DEFECTS = {
+  contributionMismatch: 2,
+  employmentMismatch: 4,
+  duplicateEmployee: 6,
+  missingUan: 8,
+  missingWage: 10,
+} as const;
+
+const MISMATCHED_MEMBER_ID = "member-aarav-unlinked";
+
 function contribution(
   month: string,
-  postingStatus: ExperienceV2State["contributions"][number]["postingStatus"] = "POSTED",
-) {
-  const wageBasisPaise = 1_800_000;
-  const expected = expectedContributionFromWage(wageBasisPaise);
+  postingStatus: Contribution["postingStatus"] = "POSTED",
+): Contribution {
+  const expected = expectedContributionFromWage(WAGE_BASIS_PAISE);
   const isMarch = month === "2026-03";
   return {
     id: `contribution-${month}`,
@@ -37,65 +51,63 @@ function contribution(
     employeeContributionPaise: expected.employeePaise,
     employerEpfContributionPaise: isMarch ? 0 : expected.employerPaise,
     epsContributionPaise: expected.epsPaise,
-    wageBasisPaise,
+    wageBasisPaise: WAGE_BASIS_PAISE,
     postingStatus,
-    postedAt: `${month}-28T06:30:00.000Z`,
+    // The delayed month was posted well after the expected posting date.
+    postedAt: postingStatus === "DELAYED" ? "2026-07-19T09:15:00.000Z" : `${month}-28T06:30:00.000Z`,
     sourceEcrId: null,
     explanation: isMarch
       ? "The employee share and EPS are present, but the expected employer EPF contribution is missing."
       : postingStatus === "RECONCILED"
         ? "This contribution was corrected and reconciled with the synthetic employer record."
-        : "The contribution is posted and matches the deterministic wage rule.",
+        : postingStatus === "DELAYED"
+          ? "The employer posted this month after the expected posting date."
+          : "The contribution is posted and matches the deterministic wage rule.",
   };
 }
 
-function createEcrRows(): EcrRow[] {
+function createRawPayrollRows(): RawSyntheticPayrollRow[] {
   return PEOPLE.map((employee, index) => {
     const wageRupees = 18_000 + (index % 9) * 2_500;
     const wagePaise = wageRupees * 100;
     const expected = expectedContributionFromWage(wagePaise);
-    const row: EcrRow = {
+    const row: RawSyntheticPayrollRow = {
       id: `ecr-row-${String(index + 1).padStart(2, "0")}`,
       employee,
-      memberId: index === 4 ? "member-aarav-mismatch" : `member-payroll-${index + 1}`,
+      memberId: `member-payroll-${index + 1}`,
       uanMasked: `DEMO-••••-${String(1800 + index * 37).slice(-4)}`,
       wagePaise,
       employeeContributionPaise: expected.employeePaise,
       employerContributionPaise: expected.employerPaise,
       epsContributionPaise: expected.epsPaise,
-      status: "READY",
-      issues: [],
     };
 
-    if (index === 2) {
+    // Contributions fall short of the deterministic 12% rule.
+    if (index === SEEDED_ECR_DEFECTS.contributionMismatch) {
       row.employeeContributionPaise -= 30_000;
       row.employerContributionPaise -= 30_000;
-      row.status = "ISSUE";
-      row.issues = [{
-        code: "UNEXPECTED_CONTRIBUTION",
-        field: "employeeContributionPaise",
-        message: "Employee and employer contributions are below the deterministic 12% wage rule.",
-        expectedPaise: expected.employeePaise,
-      }];
     }
-    if (index === 4) {
-      row.status = "ISSUE";
-      row.issues = [{
-        code: "EMPLOYMENT_RECORD_MISMATCH",
-        field: "memberId",
-        message: "The synthetic member is not linked to an active employer record.",
-        expectedPaise: null,
-      }];
+    // The shared member is present under a member id that is not linked to an
+    // employment record, but carries the masked UAN that identifies them.
+    if (index === SEEDED_ECR_DEFECTS.employmentMismatch) {
+      row.memberId = MISMATCHED_MEMBER_ID;
+      row.uanMasked = "DEMO-XXXX-4821";
     }
-    if (index === 6) {
-      row.status = "ISSUE";
-      row.issues = [{
-        code: "DUPLICATE_EMPLOYEE",
-        field: "uanMasked",
-        message: "A duplicate synthetic payroll row was detected.",
-        expectedPaise: null,
-      }];
+    // A genuine repeat of the preceding row's masked UAN.
+    if (index === SEEDED_ECR_DEFECTS.duplicateEmployee) {
+      row.uanMasked = `DEMO-••••-${String(1800 + (index - 1) * 37).slice(-4)}`;
     }
+    if (index === SEEDED_ECR_DEFECTS.missingUan) {
+      row.uanMasked = "";
+    }
+    // No wage basis, so no contribution can be derived for this row.
+    if (index === SEEDED_ECR_DEFECTS.missingWage) {
+      row.wagePaise = 0;
+      row.employeeContributionPaise = 0;
+      row.employerContributionPaise = 0;
+      row.epsContributionPaise = 0;
+    }
+
     return row;
   });
 }
@@ -107,10 +119,18 @@ export function createExperienceV2Scenario(member: Member): ExperienceV2State {
     contribution("2026-03", "MISMATCH"),
     contribution("2026-04"),
     contribution("2026-05", "RECONCILED"),
-    contribution("2026-06"),
+    contribution("2026-06", "DELAYED"),
     contribution("2026-07"),
   ];
-  const ecrRows = createEcrRows();
+
+  const isLinkedMember = (memberId: string) =>
+    memberId === member.id || /^member-payroll-\d+$/.test(memberId);
+  const ecrRows = validateEcrRows(createRawPayrollRows(), isLinkedMember);
+
+  const transferSource = member.employments.find((record) => record.id === TRANSFER_SOURCE_EMPLOYMENT_ID);
+  if (!transferSource) {
+    throw new Error(`The synthetic transfer source ${TRANSFER_SOURCE_EMPLOYMENT_ID} is missing from the member record.`);
+  }
 
   return {
     contributions,
@@ -137,21 +157,21 @@ export function createExperienceV2Scenario(member: Member): ExperienceV2State {
     advance: evaluateAdvancePolicy({
       member,
       goal: "MEDICAL",
-      latestWageBasisPaise: 2_400_000,
-      requestedAmountPaise: 6_500_000,
+      latestWageBasisPaise: WAGE_BASIS_PAISE,
+      requestedAmountPaise: 4_000_000,
       now: CREATED_AT,
     }),
     transfer: {
       id: "transfer-demo-001",
       memberId: member.id,
-      previousEmploymentId: EMPLOYMENT_ID,
-      currentEmploymentId: "employment-nextgen-labs",
-      amountPaise: 16_440_000,
+      previousEmploymentId: TRANSFER_SOURCE_EMPLOYMENT_ID,
+      currentEmploymentId: EMPLOYMENT_ID,
+      amountPaise: transferSource.pfBalancePaise,
       state: "DRAFT",
       checks: [
         { id: "SAME_UAN", label: "Same UAN", status: "PASS", explanation: "Both synthetic member records use the same masked UAN." },
-        { id: "PREVIOUS_EXIT", label: "Previous Date of Exit", status: "PASS", explanation: "The previous employment exit is available in this transfer scenario." },
-        { id: "NEW_EMPLOYMENT", label: "New employment linked", status: "PASS", explanation: "NextGen Labs is linked to the same synthetic UAN." },
+        { id: "PREVIOUS_EXIT", label: "Previous Date of Exit", status: "PASS", explanation: "The previous employment exit is recorded in the synthetic PF record." },
+        { id: "TARGET_EMPLOYMENT", label: "Receiving record linked", status: "PASS", explanation: "Demo Systems Pvt Ltd is linked to the same synthetic UAN." },
         { id: "IDENTITY", label: "Identity verified", status: "PASS", explanation: "Identity is verified." },
         { id: "BANK", label: "Bank verified", status: "PASS", explanation: "The masked bank account is verified." },
         { id: "PREVIOUS_RECORD", label: "Previous service record correction", status: "BLOCK", explanation: "The previous employer must align the service record before submission." },
@@ -165,9 +185,9 @@ export function createExperienceV2Scenario(member: Member): ExperienceV2State {
       employerId: EMPLOYER_ID,
       month: "2026-08",
       filename: "august_payroll_demo.csv",
-      state: "NEEDS_CORRECTION",
+      state: deriveEcrValidationState(ecrRows),
       rows: ecrRows,
-      totalContributionPaise: ecrRows.reduce((sum, row) => sum + row.employeeContributionPaise + row.employerContributionPaise + row.epsContributionPaise, 0),
+      totalContributionPaise: calculateEcrTotal(ecrRows),
       challanId: null,
       createdAt: CREATED_AT,
       updatedAt: CREATED_AT,

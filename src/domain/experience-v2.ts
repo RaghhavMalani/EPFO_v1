@@ -134,10 +134,11 @@ export const EcrRowSchema = z.object({
 
 export const EcrStateSchema = z.enum([
   "DRAFT",
-  "NEEDS_CORRECTION",
+  "VALIDATION_FAILED",
   "READY",
   "CHALLAN_GENERATED",
-  "PAYMENT_COMPLETED",
+  "PAYMENT_PROCESSING",
+  "PAID",
 ]);
 
 export const EcrSubmissionSchema = z.object({
@@ -182,6 +183,7 @@ export const ExperienceV2StateSchema = z.object({
 
 export type ContributionStatus = z.infer<typeof ContributionStatusSchema>;
 export type Contribution = z.infer<typeof ContributionSchema>;
+export type MemberActivity = z.infer<typeof MemberActivitySchema>;
 export type EligibilityCheck = z.infer<typeof EligibilityCheckSchema>;
 export type AdvanceGoal = z.infer<typeof AdvanceGoalSchema>;
 export type AdvanceState = z.infer<typeof AdvanceStateSchema>;
@@ -189,7 +191,9 @@ export type AdvanceApplication = z.infer<typeof AdvanceApplicationSchema>;
 export type TransferState = z.infer<typeof TransferStateSchema>;
 export type TransferApplication = z.infer<typeof TransferApplicationSchema>;
 export type EcrIssueCode = z.infer<typeof EcrIssueCodeSchema>;
+export type EcrIssue = z.infer<typeof EcrIssueSchema>;
 export type EcrRow = z.infer<typeof EcrRowSchema>;
+export type EcrRowStatus = EcrRow["status"];
 export type EcrState = z.infer<typeof EcrStateSchema>;
 export type EcrSubmission = z.infer<typeof EcrSubmissionSchema>;
 export type AssistantResponse = z.infer<typeof AssistantResponseSchema>;
