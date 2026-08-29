@@ -1,9 +1,10 @@
-import { AppStateSchema, type AppState } from "@/domain/schemas";
+import { AppStateSchema, MemberSchema, type AppState } from "@/domain/schemas";
+import { createExperienceV2Scenario } from "@/fixtures/experience-v2-scenario";
 
 const CREATED_AT = "2026-08-26T05:01:00.000Z";
 
 export function createSyntheticScenario(): AppState {
-  return AppStateSchema.parse({
+  const scenario = {
     member: {
       id: "member-aarav",
       name: "Aarav Sharma",
@@ -232,5 +233,9 @@ export function createSyntheticScenario(): AppState {
         metadata: { resolutionType: "EMPLOYER_ACTION" },
       },
     ],
+  };
+  return AppStateSchema.parse({
+    ...scenario,
+    experience: createExperienceV2Scenario(MemberSchema.parse(scenario.member)),
   });
 }

@@ -1,0 +1,10 @@
+diff --git a/src/application/service-instance.ts b/src/application/service-instance.ts
+--- a/src/application/service-instance.ts
++++ b/src/application/service-instance.ts
+@@ -1,4 +1,6 @@
+ import { EpfoApplicationService } from "@/application/epfo-service";
++import { ExperienceV2ApplicationService } from "@/application/experience-v2-service";
+ import { syntheticRepository } from "@/repositories/synthetic-repository";
+ 
+ export const epfoService = new EpfoApplicationService(syntheticRepository);
++export const experienceV2Service = new ExperienceV2ApplicationService(syntheticRepository);

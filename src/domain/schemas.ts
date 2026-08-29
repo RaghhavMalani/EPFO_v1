@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { ExperienceV2StateSchema } from "@/domain/experience-v2";
 
 export const VerificationStatusSchema = z.enum(["VERIFIED", "MISSING"]);
 export const TransferStatusSchema = z.enum(["NOT_TRANSFERRED", "TRANSFERRED"]);
@@ -199,6 +200,10 @@ export const AuditEventSchema = z.object({
     "EMPLOYER_REQUEST",
     "CLAIM",
     "PAYMENT",
+    "CONTRIBUTION",
+    "ADVANCE",
+    "TRANSFER",
+    "ECR",
   ]),
   aggregateId: z.string(),
   eventType: z.string(),
@@ -215,6 +220,7 @@ export const AppStateSchema = z.object({
   employerRequests: z.array(EmployerRequestSchema),
   claim: ClaimSchema,
   auditEvents: z.array(AuditEventSchema),
+  experience: ExperienceV2StateSchema,
 });
 
 export type EmploymentRecord = z.infer<typeof EmploymentRecordSchema>;
