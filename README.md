@@ -43,7 +43,7 @@ Experience V2 and flagship additions:
 - Hindi/English toggle across navigation and the full member journey's headline and label strings, persisted in `localStorage`
 - `/activity`: a full-page view of the deterministic event timeline
 - A print stylesheet and browser-native "Download statement" on `/passbook`
-- Over 140 deterministic domain, session, walkthrough, and assistant tests
+- Over 150 deterministic domain, session, walkthrough, assistant, and storage tests, plus a 9-case Playwright suite
 
 ## Routes
 
@@ -224,7 +224,8 @@ session driver, which is correct for a single process.
 | `SUPABASE_SERVICE_ROLE_KEY` | Production | Server-side key for the `demo_sessions` table. Never exposed to the browser. |
 | `GROQ_API_KEY` | Optional | Enables the model-backed assistant. Without it, Ask EPFO One answers from the keyword classifier and says so. |
 
-The table the Supabase driver expects:
+The `demo_sessions` table already exists on the project; this is the migration that
+created it, for reference or to recreate it elsewhere:
 
 ```sql
 create table public.demo_sessions (
