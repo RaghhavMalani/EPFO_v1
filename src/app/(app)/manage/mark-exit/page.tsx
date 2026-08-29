@@ -23,7 +23,7 @@ export default function MarkExitPage() {
       />
 
       {issue.status === "RESOLVED" ? (
-        <section className="mt-9 rounded-2xl border border-[var(--success)] bg-[var(--success-soft)] p-6 sm:p-8">
+        <section className="state-enter mt-9 rounded-2xl border border-[var(--success)] bg-[var(--success-soft)] p-6 sm:p-8">
           <CheckCircleIcon size={30} weight="fill" className="text-[var(--success)]" aria-hidden="true" />
           <h2 className="mt-4 text-2xl font-semibold">Date of Exit recorded</h2>
           <p className="mt-2 text-sm leading-6 text-[var(--muted)]">{formatDate(employment.pfRecordExitDate)} is now recorded. The account automatically moved to 6 of 7 readiness checks.</p>

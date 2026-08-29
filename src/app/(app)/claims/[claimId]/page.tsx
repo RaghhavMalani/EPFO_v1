@@ -65,7 +65,10 @@ export default async function ClaimPage({ params }: { params: Promise<{ claimId:
       ) : null}
 
       <div className="grid gap-8 py-9 lg:grid-cols-[0.8fr_1.2fr]">
-        <section className="rounded-2xl border border-[var(--line)] bg-[var(--surface)] p-6 sm:p-7 lg:sticky lg:top-24 lg:self-start">
+        <section
+          key={claim.state}
+          className="state-enter rounded-2xl border border-[var(--line)] bg-[var(--surface)] p-6 sm:p-7 lg:sticky lg:top-24 lg:self-start"
+        >
           {claim.state === "CREDITED" ? (
             <ConfettiIcon size={31} weight="fill" className="text-[var(--success)]" aria-hidden="true" />
           ) : (

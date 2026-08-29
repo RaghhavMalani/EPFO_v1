@@ -199,6 +199,37 @@ button { touch-action: manipulation; }
 .queue-metrics > div:last-child strong { font-size: 14px; }
 .queue-metrics small { color: var(--muted); font-size: 11px; }
 .employer-queue { padding-block: 26px 30px; }
+.employer-empty { padding: 22px; color: var(--muted); font-size: 13px; }
+
+.employer-split { display: grid; grid-template-columns: 1.3fr 1fr; gap: 20px; margin-top: 26px; align-items: stretch; }
+.ecr-summary, .member-impact { padding: 20px 22px; }
+.ecr-summary__head { display: flex; align-items: start; justify-content: space-between; gap: 16px; }
+.ecr-summary__head h2 { margin-top: 4px; }
+.ecr-summary__stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--line); }
+.ecr-summary__stats dt { color: var(--muted); font-size: 11px; }
+.ecr-summary__stats dd { margin: 4px 0 0; font-size: 17px; font-weight: 680; }
+.ecr-summary__stat--attention { color: var(--danger); }
+.ecr-summary .text-link { margin-top: 18px; }
+
+.member-impact__head { display: flex; align-items: start; gap: 10px; }
+.member-impact__head h2 { margin-top: 2px; }
+.member-impact__body { margin-top: 14px; color: var(--muted); font-size: 13px; line-height: 1.55; }
+.member-impact__facts { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--line); }
+.member-impact__facts dt { color: var(--muted); font-size: 11px; }
+.member-impact__facts dd { margin: 4px 0 0; font-size: 14px; font-weight: 650; }
+
+.decisions-ledger { display: grid; list-style: none; margin: 0; padding: 0; overflow: hidden; }
+.decisions-ledger li + li { border-top: 1px solid var(--line); }
+.decisions-ledger__row { display: flex; align-items: center; gap: 14px; min-height: 60px; padding: 13px 18px; }
+.decisions-ledger__body { flex: 1; min-width: 0; }
+.decisions-ledger__body strong { display: block; font-size: 13px; }
+.decisions-ledger__body small { display: block; margin-top: 3px; color: var(--muted); font-size: 12px; }
+.decisions-ledger__row > svg:last-child { flex: 0 0 auto; color: var(--accent); }
+
+@media (max-width: 900px) {
+  .employer-split { grid-template-columns: 1fr; }
+  .ecr-summary__stats { grid-template-columns: 1fr 1fr; }
+}
 .text-link--flush { margin-top: 0; }
 .request-table { margin-top: 13px; overflow: hidden; }
 .request-table__head, .request-row { display: grid; grid-template-columns: 1.15fr 1.2fr .85fr .95fr .85fr 18px; align-items: center; gap: 14px; }
@@ -663,6 +694,12 @@ button { touch-action: manipulation; }
   .login-grid { grid-template-columns: 1fr; }
   .login-card__actions { flex-direction: column; }
 }
+
+/* State-change motion: readiness, claim/transfer progression, ECR validation, employer
+   approval, and contribution posting. 260ms opacity/transform only; reduced-motion is
+   handled by the global rule below, which forces near-zero animation duration. */
+@keyframes state-enter { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+.state-enter { animation: state-enter 260ms ease; }
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; }

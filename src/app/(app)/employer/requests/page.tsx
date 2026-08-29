@@ -24,19 +24,23 @@ export default async function EmployerRequestsPage({ searchParams }: { searchPar
         </div>
         <p>{filteredRequests.length} shown · Oldest actionable first</p>
       </div>
-      <section className="request-table request-table--full panel" aria-label="Member request queue">
-        <div className="request-table__head" aria-hidden="true"><span>Member</span><span>Request</span><span>Journey</span><span>Submitted</span><span>Status</span><span>Action</span></div>
-        {filteredRequests.map((request) => (
-          <Link key={request.id} href={`/employer/requests/${request.id}`} className="request-row link-row">
-            <div data-label="Member"><strong>{request.memberName}</strong><small>{request.id}</small></div>
-            <div data-label="Request"><strong>{request.title}</strong><small>{request.requestType.replaceAll("_", " ").toLowerCase()}</small></div>
-            <div data-label="Journey"><span>{request.relatedJourney}</span></div>
-            <div data-label="Submitted"><span className="tabular">{formatDateTime(request.submittedAt)}</span></div>
-            <div data-label="Status"><StatusBadge status={request.status} /></div>
-            <div className="request-action">Review <ArrowRightIcon size={15} aria-hidden="true" /></div>
-          </Link>
-        ))}
-      </section>
+      {filteredRequests.length === 0 ? (
+        <p className="employer-empty panel">No requests match this filter yet.</p>
+      ) : (
+        <section className="request-table request-table--full panel" aria-label="Member request queue">
+          <div className="request-table__head" aria-hidden="true"><span>Member</span><span>Request</span><span>Journey</span><span>Submitted</span><span>Status</span><span>Action</span></div>
+          {filteredRequests.map((request) => (
+            <Link key={request.id} href={`/employer/requests/${request.id}`} className="request-row link-row">
+              <div data-label="Member"><strong>{request.memberName}</strong><small>{request.id}</small></div>
+              <div data-label="Request"><strong>{request.title}</strong><small>{request.requestType.replaceAll("_", " ").toLowerCase()}</small></div>
+              <div data-label="Journey"><span>{request.relatedJourney}</span></div>
+              <div data-label="Submitted"><span className="tabular">{formatDateTime(request.submittedAt)}</span></div>
+              <div data-label="Status"><StatusBadge status={request.status} /></div>
+              <div className="request-action">Review <ArrowRightIcon size={15} aria-hidden="true" /></div>
+            </Link>
+          ))}
+        </section>
+      )}
     </div>
   );
 }

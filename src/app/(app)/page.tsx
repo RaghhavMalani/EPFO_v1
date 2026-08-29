@@ -72,7 +72,7 @@ export default function HomePage() {
           </dl>
         </div>
 
-        <div className="readiness-card">
+        <div className="readiness-card state-enter" key={readiness.passedCount}>
           <div className="readiness-card__head">
             <h2>Final settlement readiness</h2>
             <p className="tabular">

@@ -44,7 +44,7 @@ export default async function EmployerRequestPage({ params }: { params: Promise<
           </section>
 
           {request.status === "IN_REVIEW" ? <section className="decision-panel panel"><div><p className="record-label">Decision</p><h2 className="section-title">Record your decision</h2><p>Approval updates the shared member record. A request for information or rejection requires a member-visible reason.</p></div><EmployerDecisionForm requestId={request.id} /></section> : null}
-          {request.status === "APPROVED" ? <section className="approved-panel"><CheckCircleIcon size={20} weight="fill" aria-hidden="true" /><div><strong>Approved and applied</strong><p>The member record was updated and Claim Preflight reran automatically.</p></div></section> : null}
+          {request.status === "APPROVED" ? <section className="approved-panel state-enter"><CheckCircleIcon size={20} weight="fill" aria-hidden="true" /><div><strong>Approved and applied</strong><p>The member record was updated and Claim Preflight reran automatically.</p></div></section> : null}
         </div>
 
         <aside className="request-detail-side">

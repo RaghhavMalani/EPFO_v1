@@ -163,7 +163,10 @@ export default function PreflightPage() {
         </div>
       </section>
 
-      <section className={readiness.isReady ? "decision-bar decision-bar--ready" : "decision-bar"}>
+      <section
+        key={readiness.passedCount}
+        className={readiness.isReady ? "decision-bar decision-bar--ready state-enter" : "decision-bar state-enter"}
+      >
         <p>
           <strong className="tabular">{readiness.passedCount} of {readiness.totalChecks} checks complete</strong>
           <span id="decision-reason">
