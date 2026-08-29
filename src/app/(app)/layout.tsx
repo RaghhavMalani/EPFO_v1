@@ -1,8 +1,9 @@
-import { epfoService } from "@/application/service-instance";
+import { loadSession } from "@/application/session";
 import { AppFooter, AppHeader } from "@/components/app-shell";
 
-export default function AppShellLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+export default async function AppShellLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   // The shell shows the member the synthetic state actually describes, never a second copy of it.
+  const { epfoService } = await loadSession();
   const { member, employer } = epfoService.getSnapshot();
   return (
     <>

@@ -1,12 +1,13 @@
 import { ArrowRightIcon, CheckCircleIcon, WarningCircleIcon } from "@phosphor-icons/react/dist/ssr";
 import Link from "next/link";
-import { epfoService } from "@/application/service-instance";
+import { loadSession } from "@/application/session";
 import { LinkButton, PageHeader, PrototypeNotice } from "@/components/ui";
 import { formatCurrency, formatDate } from "@/lib/format";
 
 export const metadata = { title: "Service history" };
 
-export default function MemberPage() {
+export default async function MemberPage() {
+  const { epfoService } = await loadSession();
   const { member } = epfoService.getSnapshot();
   const oldestEmployment = member.employments.at(0)!;
 

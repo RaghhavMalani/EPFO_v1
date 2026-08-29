@@ -1,6 +1,6 @@
 import { ArrowRightIcon, InfoIcon } from "@phosphor-icons/react/dist/ssr";
 import Link from "next/link";
-import { epfoService } from "@/application/service-instance";
+import { loadSession } from "@/application/session";
 import { PageHeader, PrototypeNotice } from "@/components/ui";
 import { T } from "@/lib/i18n/t";
 
@@ -38,7 +38,8 @@ const groups = [
   },
 ] as const;
 
-export default function OnlineServicesPage() {
+export default async function OnlineServicesPage() {
+  const { epfoService } = await loadSession();
   const snapshot = epfoService.getSnapshot();
   return (
     <div className="page-shell">

@@ -5,7 +5,7 @@ import {
   WarningCircleIcon,
 } from "@phosphor-icons/react/dist/ssr";
 import Link from "next/link";
-import { epfoService } from "@/application/service-instance";
+import { loadSession } from "@/application/session";
 import { LinkButton, PageHeader } from "@/components/ui";
 import type { Issue, PreflightCheck } from "@/domain/schemas";
 import { T } from "@/lib/i18n/t";
@@ -43,7 +43,8 @@ function ReadinessMap({ checks }: { checks: PreflightCheck[] }) {
   );
 }
 
-export default function PreflightPage() {
+export default async function PreflightPage() {
+  const { epfoService } = await loadSession();
   const snapshot = epfoService.getSnapshot();
   const { readiness, preflight } = snapshot;
   const blockers = preflight.filter((check) => check.status !== "PASS");

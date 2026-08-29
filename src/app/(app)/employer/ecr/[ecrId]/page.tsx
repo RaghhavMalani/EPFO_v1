@@ -1,7 +1,7 @@
 import { CheckCircleIcon, FileTextIcon, UserCircleIcon, WarningCircleIcon } from "@phosphor-icons/react/dist/ssr";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { epfoService, experienceV2Service } from "@/application/service-instance";
+import { loadSession } from "@/application/session";
 import { ActionButton } from "@/components/action-button";
 import { EcrRowCorrectionForm } from "@/components/ecr-row-correction-form";
 import { LinkButton, PageHeader, PrototypeNotice } from "@/components/ui";
@@ -42,6 +42,7 @@ export default async function EcrFilingPage({
 }) {
   const { ecrId } = await params;
   const { view } = await searchParams;
+  const { epfoService, experienceV2Service } = await loadSession();
   const snapshot = epfoService.getSnapshot();
   const experience = experienceV2Service.getExperience();
   const ecr = experience.ecrs.find((item) => item.id === ecrId);

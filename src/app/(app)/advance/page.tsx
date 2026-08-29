@@ -1,5 +1,5 @@
 import { CheckIcon, WarningCircleIcon } from "@phosphor-icons/react/dist/ssr";
-import { epfoService, experienceV2Service } from "@/application/service-instance";
+import { loadSession } from "@/application/session";
 import { AdvanceSubmitForm, GOAL_LABELS, GoalPicker, SimulateProcessingButton } from "@/components/advance-form";
 import { DemoBadge, LinkButton, PageHeader, PrototypeNotice } from "@/components/ui";
 import { ADVANCE_SEQUENCE } from "@/domain/advance-machine";
@@ -18,7 +18,8 @@ const SEQUENCE_LABELS: Record<AdvanceState, string> = {
   NOT_ELIGIBLE: "Not eligible",
 };
 
-export default function AdvancePage() {
+export default async function AdvancePage() {
+  const { epfoService, experienceV2Service } = await loadSession();
   const { advance } = experienceV2Service.getExperience();
   const { member } = epfoService.getSnapshot();
   const isPreSubmission = advance.state === "DRAFT" || advance.state === "READY" || advance.state === "NOT_ELIGIBLE";

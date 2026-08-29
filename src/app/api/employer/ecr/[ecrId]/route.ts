@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { experienceV2Service } from "@/application/service-instance";
+import { mutateSession, type SessionServices } from "@/application/session";
 import { apiError, noStoreHeaders } from "@/app/api/http";
 
 const RowCorrection = z.object({
@@ -21,7 +21,11 @@ const EcrActionBody = z.discriminatedUnion("action", [
   z.object({ action: z.literal("CONFIRM_PAYMENT") }),
 ]);
 
-function runEcrAction(ecrId: string, body: z.infer<typeof EcrActionBody>) {
+function runEcrAction(
+  { experienceV2Service }: SessionServices,
+  ecrId: string,
+  body: z.infer<typeof EcrActionBody>,
+) {
   switch (body.action) {
     case "VALIDATE":
       return experienceV2Service.validateEcr(ecrId);
@@ -43,7 +47,8 @@ export async function POST(
   try {
     const { ecrId } = await params;
     const body = EcrActionBody.parse(await request.json());
-    return NextResponse.json(runEcrAction(ecrId, body), { headers: noStoreHeaders });
+    const result = await mutateSession((services) => runEcrAction(services, ecrId, body));
+    return NextResponse.json(result, { headers: noStoreHeaders });
   } catch (error) {
     return apiError(error);
   }

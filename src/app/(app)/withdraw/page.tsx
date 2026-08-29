@@ -1,5 +1,5 @@
 import { CheckCircleIcon } from "@phosphor-icons/react/dist/ssr";
-import { epfoService } from "@/application/service-instance";
+import { loadSession } from "@/application/session";
 import { ActionButton } from "@/components/action-button";
 import { PageHeader, PrototypeNotice } from "@/components/ui";
 import { T } from "@/lib/i18n/t";
@@ -7,7 +7,8 @@ import { formatCurrency } from "@/lib/format";
 
 export const metadata = { title: "Final PF settlement" };
 
-export default function WithdrawPage() {
+export default async function WithdrawPage() {
+  const { epfoService } = await loadSession();
   const { member, withdrawalService } = epfoService.getSnapshot();
   return (
     <div className="page-shell page-shell--narrow">

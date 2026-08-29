@@ -1,4 +1,4 @@
-import { epfoService, experienceV2Service } from "@/application/service-instance";
+import { loadSession } from "@/application/session";
 import { PageHeader, PrototypeNotice } from "@/components/ui";
 import { RetirementChart } from "@/components/retirement-chart";
 import { completedServiceMonths } from "@/domain/advance-policy";
@@ -16,7 +16,8 @@ export const metadata = { title: "Pension and retirement projection" };
 
 const AS_OF = "2026-08-29T05:00:00.000Z";
 
-export default function PensionPage() {
+export default async function PensionPage() {
+  const { epfoService, experienceV2Service } = await loadSession();
   const { member } = epfoService.getSnapshot();
   const experience = experienceV2Service.getExperience();
 

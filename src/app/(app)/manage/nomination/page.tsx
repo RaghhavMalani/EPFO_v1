@@ -1,12 +1,13 @@
 import { CheckCircleIcon, MegaphoneIcon } from "@phosphor-icons/react/dist/ssr";
-import { epfoService } from "@/application/service-instance";
+import { loadSession } from "@/application/session";
 import { NominationForm } from "@/components/nomination-form";
 import { PageHeader, PrototypeNotice } from "@/components/ui";
 import { formatDateTime } from "@/lib/format";
 
 export const metadata = { title: "e-Nomination" };
 
-export default function NominationPage() {
+export default async function NominationPage() {
+  const { epfoService } = await loadSession();
   const { member } = epfoService.getSnapshot();
   const { nomination } = member;
 

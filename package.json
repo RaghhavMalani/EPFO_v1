@@ -18,6 +18,7 @@
   },
   "dependencies": {
     "@phosphor-icons/react": "latest",
+    "@supabase/supabase-js": "^2.112.4",
     "geist": "latest",
     "next": "latest",
     "react": "latest",

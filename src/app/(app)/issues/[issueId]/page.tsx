@@ -1,6 +1,6 @@
 import { InfoIcon } from "@phosphor-icons/react/dist/ssr";
 import { notFound } from "next/navigation";
-import { epfoService } from "@/application/service-instance";
+import { loadSession } from "@/application/session";
 import { ActionButton } from "@/components/action-button";
 import { Definition, LinkButton, PageHeader, StatusBadge } from "@/components/ui";
 import type { EmployerRequest, Issue } from "@/domain/schemas";
@@ -26,6 +26,7 @@ function ActionPanel({ issue, request }: { issue: Issue; request?: EmployerReque
 
 export default async function IssuePage({ params }: { params: Promise<{ issueId: string }> }) {
   const { issueId } = await params;
+  const { epfoService } = await loadSession();
   const snapshot = epfoService.getSnapshot();
   const issue = snapshot.issues.find((candidate) => candidate.id === issueId);
   if (!issue) notFound();

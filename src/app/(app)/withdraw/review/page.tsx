@@ -4,7 +4,7 @@ import {
   ShieldCheckIcon,
 } from "@phosphor-icons/react/dist/ssr";
 import { redirect } from "next/navigation";
-import { epfoService } from "@/application/service-instance";
+import { loadSession } from "@/application/session";
 import { ActionButton } from "@/components/action-button";
 import { PageHeader, PrototypeNotice } from "@/components/ui";
 import { T } from "@/lib/i18n/t";
@@ -12,7 +12,8 @@ import { formatCurrency } from "@/lib/format";
 
 export const metadata = { title: "Review withdrawal" };
 
-export default function ReviewPage() {
+export default async function ReviewPage() {
+  const { epfoService } = await loadSession();
   const snapshot = epfoService.getSnapshot();
   if (!snapshot.readiness.isReady) {
     redirect("/withdraw/preflight");

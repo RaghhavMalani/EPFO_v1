@@ -1,6 +1,6 @@
 import { ArrowRightIcon, CheckCircleIcon, WarningCircleIcon, XIcon } from "@phosphor-icons/react/dist/ssr";
 import Link from "next/link";
-import { epfoService, experienceV2Service } from "@/application/service-instance";
+import { loadSession } from "@/application/session";
 import { PrototypeNotice } from "@/components/ui";
 import { contributionStatusLabel, selectFocusMonth, type PassbookMonth } from "@/domain/contribution-health";
 import { splitContribution } from "@/domain/contribution-split";
@@ -219,6 +219,7 @@ export default async function PassbookPage({
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
   const params = await searchParams;
+  const { epfoService, experienceV2Service } = await loadSession();
   const snapshot = epfoService.getSnapshot();
   const passbook = experienceV2Service.getPassbook();
 

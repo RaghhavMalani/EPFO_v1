@@ -5,7 +5,7 @@ import {
   WarningIcon,
 } from "@phosphor-icons/react/dist/ssr";
 import Link from "next/link";
-import { epfoService } from "@/application/service-instance";
+import { loadSession } from "@/application/session";
 import { ActionButton } from "@/components/action-button";
 import { LinkButton, PageHeader } from "@/components/ui";
 import { CLAIM_SEQUENCE } from "@/domain/claim-machine";
@@ -35,7 +35,8 @@ const claimControls: Array<{
   { action: "CREDIT_PAYMENT", label: "Simulate bank credit", requiredState: "BANK_PROCESSING" },
 ];
 
-export default function DemoPage() {
+export default async function DemoPage() {
+  const { epfoService } = await loadSession();
   const snapshot = epfoService.getSnapshot();
   const claimIndex = CLAIM_SEQUENCE.indexOf(snapshot.claim.state);
 

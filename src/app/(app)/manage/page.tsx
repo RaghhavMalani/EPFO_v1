@@ -1,13 +1,14 @@
 import { ArrowRightIcon, CheckCircleIcon, InfoIcon, WarningCircleIcon } from "@phosphor-icons/react/dist/ssr";
 import Link from "next/link";
-import { epfoService } from "@/application/service-instance";
+import { loadSession } from "@/application/session";
 import { PageHeader, PrototypeNotice, StatusBadge } from "@/components/ui";
 import { T } from "@/lib/i18n/t";
 import { humanizeState } from "@/lib/format";
 
 export const metadata = { title: "Manage account" };
 
-export default function ManagePage() {
+export default async function ManagePage() {
+  const { epfoService } = await loadSession();
   const snapshot = epfoService.getSnapshot();
   const exitIssue = snapshot.issues.find((issue) => issue.type === "MISSING_EXIT_DATE")!;
   const profileChecks = [

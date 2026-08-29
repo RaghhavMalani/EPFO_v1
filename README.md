@@ -12,7 +12,7 @@ No screen connects to EPFO, government APIs, employers, Aadhaar, PAN services, b
   - **Member:** Aarav Sharma · UAN `100200304821`
   - **Employer:** Demo Systems Pvt Ltd · Establishment ID `DL-DEM-2712`
 - Mock cookie-based auth only — there is no real session or credential store. Member and employer routes redirect to `/login` without the right role cookie; a masthead **Sign out** control clears it.
-- `/demo`, linked quietly from the footer as **Demo controls**, resets the shared in-memory scenario and advances post-submission processing states. State is shared across all visitors; judges can reset it at any time.
+- `/demo`, linked quietly from the footer as **Demo controls**, resets your own scenario and advances post-submission processing states. Every visitor gets an independent scenario, so a reset never disturbs anyone else mid-demo.
 
 ## What is included
 
@@ -28,7 +28,7 @@ No screen connects to EPFO, government APIs, employers, Aadhaar, PAN services, b
 - Shared state: employer approval updates the underlying member record and automatically reruns preflight
 - Guarded issue, employer-request, claim, advance, transfer, and ECR state machines
 - Explicit claim confirmation and a detailed timeline through simulated bank credit
-- Typed in-memory repository with Zod runtime validation and audit events, shared correctly across every Route Handler and page in both `next dev` and a production `next start`
+- Per-visitor scenario state persisted in Postgres, with Zod runtime validation and audit events, correct across every Route Handler and page in `next dev`, a production `next start`, and a multi-instance serverless deployment
 
 Experience V2 and flagship additions:
 
@@ -43,7 +43,7 @@ Experience V2 and flagship additions:
 - Hindi/English toggle across navigation and the full member journey's headline and label strings, persisted in `localStorage`
 - `/activity`: a full-page view of the deterministic event timeline
 - A print stylesheet and browser-native "Download statement" on `/passbook`
-- Over 110 deterministic domain tests
+- Over 115 deterministic domain and session tests
 
 ## Routes
 
@@ -95,19 +95,45 @@ src/
   domain/          Schemas, preflight, routing, readiness, state machines, timeline
                    Contribution health and split, advance policy, transfer, ECR, pension, nomination
   fixtures/        Aarav Sharma and Demo Systems synthetic scenario
-  repositories/    Repository contract, in-memory implementation, singleton
+  repositories/    Repository contract, request-scoped working copy, session store drivers
   adapters/        Member self-service, employer workflow, claim processor
-  application/     Use cases that coordinate domain logic and persistence
+  application/     Use cases that coordinate domain logic, and the session boundary
   lib/i18n/        Client-side Hindi/English dictionary, context, and toggle
   app/api/         Zod-validated command routes
   app/             Next.js App Router member and employer screens
-  proxy.ts         Next.js 16 route gating on the mock role cookie
+  proxy.ts         Next.js 16 demo-session minting and mock role-cookie gating
   components/      Reusable presentation and client action controls
 ```
 
 React components do not decide routing, readiness, eligibility, workflow transitions, or monetary values. All mutations pass through application APIs and persist through the repository contract.
 
-The repository is intentionally process-local: it is published on `globalThis` so every Route Handler and Server Component in the process shares one instance, in both `next dev` and a production `next start`. Restarting the server resets the synthetic scenario, and the reset control on `/demo` does the same explicitly.
+### Session state
+
+Every visitor gets their own scenario, keyed by a `epfo-one-session` cookie that
+`proxy.ts` mints once and stamps onto both pages and command routes.
+
+`application/session.ts` is the only boundary where state is read or written durably.
+`loadSession()` hydrates a working copy for rendering; `mutateSession()` hydrates one,
+runs a single command against it, and persists the result *before* the response is
+returned — the client calls `router.refresh()` as soon as a command resolves, so a
+write deferred past the response would race the read that has to observe it.
+
+Everything below that boundary stays synchronous. The domain services touch state many
+times while resolving one command, and the working copy handed to them is an ordinary
+in-memory object, so none of that becomes a round trip. A working copy loaded for
+rendering is read-only and throws on mutation, which turns "pages read, command routes
+write" from a convention into something the runtime enforces.
+
+Storage is a `SessionStore` with two drivers:
+
+| Driver | When | Notes |
+| --- | --- | --- |
+| `supabase` | `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` are set | One `demo_sessions` row per visitor, holding the whole scenario as `jsonb`. Reached with the service-role key from server code only, so RLS stays fully closed. |
+| `memory` | Neither is set | Correct for `next dev`, the tests, and a single-process `next start`. Logs a warning in production, because several serverless instances would each hold a different copy. |
+
+A session with no row yet — or one whose stored scenario no longer matches the schema,
+written by an older deployment — simply seeds from the fixtures. Nothing is written
+until a command actually changes something.
 
 Policy-inspired assumptions and primary public references are recorded in [`docs/POLICY_SOURCES.md`](docs/POLICY_SOURCES.md).
 
@@ -142,4 +168,28 @@ To run the Playwright end-to-end happy path (requires a browser install; skips g
 
 ```bash
 npm run test:e2e
+```
+
+## Environment
+
+Neither variable is needed to run locally — without them the app uses the in-process
+session driver, which is correct for a single process.
+
+| Variable | Required | Purpose |
+| --- | --- | --- |
+| `SUPABASE_URL` | Production | Supabase project URL for durable per-visitor session state. |
+| `SUPABASE_SERVICE_ROLE_KEY` | Production | Server-side key for the `demo_sessions` table. Never exposed to the browser. |
+
+The table the Supabase driver expects:
+
+```sql
+create table public.demo_sessions (
+  session_id  text primary key,
+  state       jsonb       not null,
+  created_at  timestamptz not null default now(),
+  updated_at  timestamptz not null default now()
+);
+
+alter table public.demo_sessions enable row level security;
+-- No policies: the table is reached only with the service-role key from server code.
 ```

@@ -1,5 +1,5 @@
 import { ArrowRightIcon, CheckIcon, WarningCircleIcon } from "@phosphor-icons/react/dist/ssr";
-import { epfoService, experienceV2Service } from "@/application/service-instance";
+import { loadSession } from "@/application/session";
 import { DemoBadge, LinkButton, PageHeader, PrototypeNotice } from "@/components/ui";
 import { StateSequenceMap } from "@/components/state-sequence-map";
 import { TransferActionButton } from "@/components/transfer-form";
@@ -20,7 +20,8 @@ const SEQUENCE_LABELS: Record<TransferState, string> = {
   COMPLETED: "Completed",
 };
 
-export default function TransferPage() {
+export default async function TransferPage() {
+  const { epfoService, experienceV2Service } = await loadSession();
   const { transfer } = experienceV2Service.getExperience();
   const { member } = epfoService.getSnapshot();
   const source = member.employments.find((record) => record.id === transfer.previousEmploymentId);

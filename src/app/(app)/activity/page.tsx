@@ -1,6 +1,6 @@
 import { CheckCircleIcon, ClockIcon, WarningCircleIcon } from "@phosphor-icons/react/dist/ssr";
 import Link from "next/link";
-import { epfoService } from "@/application/service-instance";
+import { loadSession } from "@/application/session";
 import { PageHeader, PrototypeNotice } from "@/components/ui";
 import { buildMemberActivity, type ActivityTone } from "@/domain/activity-feed";
 import { formatDateTime } from "@/lib/format";
@@ -13,7 +13,8 @@ const TONE_ICON: Record<ActivityTone, typeof CheckCircleIcon> = {
   complete: CheckCircleIcon,
 };
 
-export default function ActivityPage() {
+export default async function ActivityPage() {
+  const { epfoService } = await loadSession();
   const snapshot = epfoService.getSnapshot();
   const activity = buildMemberActivity(snapshot, snapshot.auditEvents.length);
 
