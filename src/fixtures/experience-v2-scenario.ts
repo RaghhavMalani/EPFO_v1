@@ -56,6 +56,14 @@ function contribution(
     // The delayed month was posted well after the expected posting date.
     postedAt: postingStatus === "DELAYED" ? "2026-07-19T09:15:00.000Z" : `${month}-28T06:30:00.000Z`,
     sourceEcrId: null,
+    reconciliation: postingStatus === "RECONCILED"
+      ? {
+          // Originally filed at half the employer share, then corrected by the employer.
+          originalEmployerEpfContributionPaise: Math.round(expected.employerPaise / 2),
+          correctedAt: "2026-06-12T07:20:00.000Z",
+          correctionNote: "Demo Systems Pvt Ltd filed a revised return for this month.",
+        }
+      : null,
     explanation: isMarch
       ? "The employee share and EPS are present, but the expected employer EPF contribution is missing."
       : postingStatus === "RECONCILED"

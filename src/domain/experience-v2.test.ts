@@ -1,10 +1,13 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { ExperienceV2ApplicationService } from "@/application/experience-v2-service";
 import { ADVANCE_SEQUENCE, nextAdvanceState, transitionAdvance } from "@/domain/advance-machine";
+import { buildMemberActivity } from "@/domain/activity-feed";
 import { completedServiceMonths, evaluateAdvancePolicy } from "@/domain/advance-policy";
 import {
+  contributionStatusLabel,
   evaluateContributionHealth,
   expectedContributionFromWage,
+  selectPassbookHighlights,
   summarisePassbook,
 } from "@/domain/contribution-health";
 import {
@@ -65,6 +68,7 @@ function contributionFor(overrides: Partial<Contribution> = {}): Contribution {
     postingStatus: "POSTED",
     postedAt: "2026-01-28T06:30:00.000Z",
     sourceEcrId: null,
+    reconciliation: null,
     explanation: "test",
     ...overrides,
   };
@@ -854,5 +858,86 @@ describe("Experience V2 application service", () => {
     const snapshot = repository.getState();
     snapshot.member.currentPfBalancePaise = 1;
     expect(repository.getState().member.currentPfBalancePaise).not.toBe(1);
+  });
+});
+
+// ------------------------------------------------------------------- Activity feed
+
+describe("member activity feed", () => {
+  const state = () => scenario();
+
+  it("describes two blocker events distinctly instead of repeating one label", () => {
+    const entries = buildMemberActivity(state(), 4);
+    const blockers = entries.filter((entry) => entry.title.endsWith("issue detected"));
+    expect(blockers).toHaveLength(2);
+    expect(new Set(blockers.map((entry) => entry.title)).size).toBe(2);
+    expect(blockers.map((entry) => entry.title).sort()).toEqual([
+      "Date of Exit issue detected",
+      "Legacy employment record issue detected",
+    ]);
+  });
+
+  it("links each entry to the aggregate it describes", () => {
+    const entries = buildMemberActivity(state(), 4);
+    for (const entry of entries) {
+      expect(entry.detail.length).toBeGreaterThan(0);
+      expect(entry.timestamp).toMatch(/^\d{4}-\d{2}-\d{2}T/);
+    }
+    expect(entries.every((entry) => entry.href?.startsWith("/issues/"))).toBe(true);
+  });
+
+  it("marks an unresolved blocker as needing attention", () => {
+    expect(buildMemberActivity(state(), 4).every((entry) => entry.tone === "attention")).toBe(true);
+  });
+
+  it("describes a posted contribution once the employer completes an ECR payment", () => {
+    const repository = new InMemoryEpfoRepository();
+    let n = 0;
+    const service = new ExperienceV2ApplicationService(repository, () => new Date(NOW), (p) => `${p}-${++n}`);
+    service.correctEcrRow(ECR_ID, "ecr-row-03");
+    service.correctEcrRow(ECR_ID, "ecr-row-05");
+    service.correctEcrRow(ECR_ID, "ecr-row-07");
+    service.correctEcrRow(ECR_ID, "ecr-row-09", { uanMasked: "DEMO-••••-9001" });
+    service.correctEcrRow(ECR_ID, "ecr-row-11", { wagePaise: 2_000_000 });
+    service.generateChallan(ECR_ID);
+    service.startEcrPayment(ECR_ID);
+    service.completeEcrPayment(ECR_ID);
+
+    const posted = buildMemberActivity(repository.getState(), 6)
+      .find((entry) => entry.title === "August 2026 contribution posted");
+    expect(posted).toBeDefined();
+    expect(posted?.tone).toBe("complete");
+    expect(posted?.href).toBe("/passbook?month=2026-08");
+  });
+});
+
+describe("passbook highlights", () => {
+  it("surfaces the newest months plus any earlier month needing attention", () => {
+    const summary = summarisePassbook(scenario().experience.contributions);
+    const highlights = selectPassbookHighlights(summary, 3);
+    expect(highlights.map((m) => m.contribution.month)).toEqual([
+      "2026-07",
+      "2026-06",
+      "2026-05",
+      "2026-03",
+    ]);
+  });
+
+  it("labels every posting status for display", () => {
+    expect(contributionStatusLabel("POSTED")).toBe("Posted");
+    expect(contributionStatusLabel("MISMATCH")).toBe("Needs attention");
+    expect(contributionStatusLabel("RECONCILED")).toBe("Reconciled");
+    expect(contributionStatusLabel("DELAYED")).toBe("Delayed");
+    expect(contributionStatusLabel("MISSING")).toBe("Not posted");
+  });
+
+  it("carries a correction trace on the reconciled month only", () => {
+    const contributions = scenario().experience.contributions;
+    const may = contributions.find((item) => item.month === "2026-05");
+    expect(may?.reconciliation).toMatchObject({
+      originalEmployerEpfContributionPaise: 108_000,
+      correctionNote: "Demo Systems Pvt Ltd filed a revised return for this month.",
+    });
+    expect(contributions.filter((item) => item.reconciliation !== null)).toHaveLength(1);
   });
 });

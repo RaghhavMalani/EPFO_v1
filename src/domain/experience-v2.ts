@@ -8,6 +8,13 @@ export const ContributionStatusSchema = z.enum([
   "RECONCILED",
 ]);
 
+/** The trace left behind when a short-filed month is later corrected by the employer. */
+export const ContributionReconciliationSchema = z.object({
+  originalEmployerEpfContributionPaise: z.number().int().nonnegative(),
+  correctedAt: z.string(),
+  correctionNote: z.string(),
+});
+
 export const ContributionSchema = z.object({
   id: z.string(),
   memberId: z.string(),
@@ -22,6 +29,7 @@ export const ContributionSchema = z.object({
   postingStatus: ContributionStatusSchema,
   postedAt: z.string().nullable(),
   sourceEcrId: z.string().nullable(),
+  reconciliation: ContributionReconciliationSchema.nullable(),
   explanation: z.string(),
 });
 
@@ -183,6 +191,7 @@ export const ExperienceV2StateSchema = z.object({
 
 export type ContributionStatus = z.infer<typeof ContributionStatusSchema>;
 export type Contribution = z.infer<typeof ContributionSchema>;
+export type ContributionReconciliation = z.infer<typeof ContributionReconciliationSchema>;
 export type MemberActivity = z.infer<typeof MemberActivitySchema>;
 export type EligibilityCheck = z.infer<typeof EligibilityCheckSchema>;
 export type AdvanceGoal = z.infer<typeof AdvanceGoalSchema>;

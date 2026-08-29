@@ -35,3 +35,15 @@ export function humanizeState(value: string): string {
     .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
     .join(" ");
 }
+
+export function formatMonth(month: string, style: "short" | "long" = "short"): string {
+  const [year, index] = month.split("-");
+  const label = new Intl.DateTimeFormat("en-IN", { month: style, timeZone: "UTC" })
+    .format(new Date(Date.UTC(Number(year), Number(index) - 1, 1)));
+  return `${label} ${year}`;
+}
+
+/** Currency without the symbol, for dense ledger columns that carry it in the header. */
+export function formatAmount(paise: number): string {
+  return new Intl.NumberFormat("en-IN", { maximumFractionDigits: 0 }).format(paise / 100);
+}

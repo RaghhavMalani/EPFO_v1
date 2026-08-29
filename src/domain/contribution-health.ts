@@ -143,3 +143,49 @@ export function summarisePassbook(contributions: Contribution[]): PassbookSummar
       .map((m) => m.contribution.month),
   };
 }
+
+const STATUS_LABELS: Record<ContributionStatus, string> = {
+  POSTED: "Posted",
+  DELAYED: "Delayed",
+  MISMATCH: "Needs attention",
+  MISSING: "Not posted",
+  RECONCILED: "Reconciled",
+};
+
+export function contributionStatusLabel(status: ContributionStatus) {
+  return STATUS_LABELS[status];
+}
+
+/**
+ * The months worth surfacing outside the full passbook: the most recent few, plus any
+ * earlier month still needing attention. Newest first, no duplicates.
+ */
+export function selectPassbookHighlights(summary: PassbookSummary, recentCount = 3): PassbookMonth[] {
+  const newestFirst = [...summary.months].reverse();
+  const recent = newestFirst.slice(0, recentCount);
+  const attention = newestFirst
+    .slice(recentCount)
+    .filter((month) => ATTENTION_STATUSES.includes(month.health.status));
+  return [...recent, ...attention];
+}
+
+/** Most severe first, so the passbook opens on the month that most needs reading. */
+const FOCUS_PRIORITY: Record<ContributionStatus, number> = {
+  MISSING: 0,
+  MISMATCH: 1,
+  DELAYED: 2,
+  RECONCILED: 3,
+  POSTED: 4,
+};
+
+/**
+ * The month a passbook view should explain by default: the most severe health status,
+ * and among equals the most recent. Returns null when there is nothing to show.
+ */
+export function selectFocusMonth(months: PassbookMonth[]): PassbookMonth | null {
+  if (months.length === 0) return null;
+  return [...months].sort((a, b) => {
+    const priority = FOCUS_PRIORITY[a.health.status] - FOCUS_PRIORITY[b.health.status];
+    return priority !== 0 ? priority : b.contribution.month.localeCompare(a.contribution.month);
+  })[0];
+}

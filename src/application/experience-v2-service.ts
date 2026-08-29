@@ -468,6 +468,7 @@ export class ExperienceV2ApplicationService {
       postingStatus: "POSTED",
       postedAt: now,
       sourceEcrId: ecr.id,
+      reconciliation: null,
       explanation: "This contribution was posted from the completed synthetic employer ECR payment.",
     });
 

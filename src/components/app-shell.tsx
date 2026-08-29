@@ -5,10 +5,10 @@ import { usePathname } from "next/navigation";
 
 const memberNavigation = [
   { href: "/", label: "Home" },
-  { href: "/member", label: "View" },
+  { href: "/passbook", label: "Passbook" },
+  { href: "/member", label: "Employment", mobileLabel: "Jobs" },
+  { href: "/online-services", label: "Services" },
   { href: "/manage", label: "Manage" },
-  { href: "/manage#account", label: "Account" },
-  { href: "/online-services", label: "Online Services", mobileLabel: "Services" },
 ];
 
 const employerNavigation = [
@@ -27,7 +27,9 @@ function isCurrent(pathname: string, href: string) {
   return pathname === path || pathname.startsWith(`${path}/`);
 }
 
-export function AppHeader() {
+export type MemberIdentity = { name: string; uanMasked: string };
+
+export function AppHeader({ member }: { member: MemberIdentity }) {
   const pathname = usePathname();
   const isEmployer = pathname.startsWith("/employer");
   const navigation = isEmployer ? employerNavigation : memberNavigation;
@@ -52,7 +54,7 @@ export function AppHeader() {
                 </>
               ) : (
                 <>
-                  <div><strong>Aarav Mehta</strong><span>UAN · 1002••••0506</span></div>
+                  <div><strong>{member.name}</strong><span>UAN · {member.uanMasked}</span></div>
                   <Link href="/employer" className="role-switch">Employer role</Link>
                 </>
               )}

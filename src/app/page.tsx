@@ -1,85 +1,195 @@
-import { ArrowRightIcon, CheckCircleIcon, ClockIcon, WarningCircleIcon } from "@phosphor-icons/react/dist/ssr";
+import {
+  ArrowRightIcon,
+  CheckCircleIcon,
+  ClockIcon,
+  WarningCircleIcon,
+} from "@phosphor-icons/react/dist/ssr";
 import Link from "next/link";
-import { epfoService } from "@/application/service-instance";
-import { LinkButton, PrototypeNotice, StatusBadge } from "@/components/ui";
-import { formatCurrency, formatDateTime, humanizeState } from "@/lib/format";
+import { epfoService, experienceV2Service } from "@/application/service-instance";
+import { LinkButton, PrototypeNotice } from "@/components/ui";
+import { buildMemberActivity, type ActivityTone } from "@/domain/activity-feed";
+import { contributionStatusLabel, selectPassbookHighlights } from "@/domain/contribution-health";
+import { formatAmount, formatCurrency, formatDateTime, formatMonth } from "@/lib/format";
+
+const PF_SERVICES = [
+  { title: "Withdraw PF", detail: "Final settlement under Form 19", href: "/withdraw" },
+  { title: "Take an advance", detail: "Partial withdrawal for a specific purpose", href: "/online-services" },
+  { title: "Transfer PF", detail: "Consolidate a previous PF account", href: "/online-services" },
+];
+
+const ACCOUNT_SERVICES = [
+  { title: "Service history", detail: "Every employment record under this UAN", href: "/member" },
+  { title: "Manage records", detail: "Exit dates, profile and account details", href: "/manage" },
+];
+
+const TONE_ICON: Record<ActivityTone, typeof CheckCircleIcon> = {
+  attention: WarningCircleIcon,
+  progress: ClockIcon,
+  complete: CheckCircleIcon,
+};
 
 export default function HomePage() {
   const snapshot = epfoService.getSnapshot();
-  const lastEmployment = snapshot.member.employments.at(-1)!;
+  const passbook = experienceV2Service.getPassbook();
+  const highlights = selectPassbookHighlights(passbook);
+  const activity = buildMemberActivity(snapshot, 4);
   const activeIssues = snapshot.issues.filter((issue) => issue.status !== "RESOLVED");
-  const recentEvents = snapshot.auditEvents.slice(-3).toReversed();
+  const lastEmployment = snapshot.member.employments.at(-1)!;
+  const latestMonth = passbook.months.at(-1);
+  const { readiness } = snapshot;
 
   return (
     <div className="page-shell">
-      <header className="home-heading">
+      <header className="home-masthead">
         <div>
-          <p className="eyebrow">Member home</p>
-          <h1>Good afternoon, Aarav.</h1>
-          <p>Here is your PF position, what needs attention, and the next useful action.</p>
+          <h1>Good afternoon, {snapshot.member.name.split(" ")[0]}.</h1>
+          <p>Your PF position, what changed recently, and anything that needs you.</p>
         </div>
-        <LinkButton href="/withdraw">Start a claim</LinkButton>
+        <LinkButton href="/online-services">Open PF services</LinkButton>
       </header>
 
-      <section className="home-overview" aria-label="PF overview">
-        <article className="balance-block">
+      <section className="account-band" aria-label="Provident fund position">
+        <div className="account-band__balance">
           <p className="record-label">Available PF balance</p>
           <p className="balance-value tabular">{formatCurrency(snapshot.member.currentPfBalancePaise)}</p>
-          <dl className="balance-facts">
-            <div><dt>Member records</dt><dd>{snapshot.member.employments.length} under one UAN</dd></div>
-            <div><dt>Last employer</dt><dd>{lastEmployment.employerName}</dd></div>
-            <div><dt>Employment status</dt><dd>Not currently PF-covered</dd></div>
-          </dl>
-          <Link href="/member" className="text-link">View service history <ArrowRightIcon size={16} aria-hidden="true" /></Link>
-        </article>
-
-        <article className="attention-block panel">
-          <div className="section-heading-row">
-            <div><p className="record-label">Claim readiness</p><h2 className="section-title">Needs your attention</h2></div>
-            <p className="readiness-count tabular"><strong>{snapshot.readiness.passedCount}</strong> of {snapshot.readiness.totalChecks} checks passed</p>
-          </div>
-          <div className="attention-list">
-            {activeIssues.map((issue) => (
-              <Link key={issue.id} href={`/issues/${issue.id}`} className="attention-row link-row">
-                <WarningCircleIcon size={20} weight="fill" aria-hidden="true" />
-                <span><strong>{issue.title}</strong><small>{issue.userAction}</small></span>
-                <StatusBadge status={issue.status} />
-              </Link>
-            ))}
-          </div>
-          <Link href="/withdraw/preflight" className="text-link">Review all seven checks <ArrowRightIcon size={16} aria-hidden="true" /></Link>
-        </article>
-      </section>
-
-      <section className="home-actions">
-        <div className="section-heading-row">
-          <div><p className="record-label">Common tasks</p><h2 className="section-title">What would you like to do?</h2></div>
-        </div>
-        <div className="action-directory panel">
-          {[
-            ["Withdraw my PF", "Check eligibility before starting Form 19", "/withdraw"],
-            ["Manage my records", "Update employment and account details", "/manage"],
-            ["Track my claim", "See responsibility and next steps", `/claims/${snapshot.claim.id}`],
-            ["Transfer PF", "Review transfer services after changing jobs", "/online-services"],
-          ].map(([title, description, href]) => (
-            <Link key={title} href={href} className="directory-row link-row">
-              <span><strong>{title}</strong><small>{description}</small></span><ArrowRightIcon size={18} aria-hidden="true" />
-            </Link>
-          ))}
-        </div>
-      </section>
-
-      <section className="activity-section">
-        <div><p className="record-label">Account log</p><h2 className="section-title">Recent activity</h2></div>
-        <div className="activity-list panel">
-          {recentEvents.map((event) => (
-            <div key={event.id} className="activity-row">
-              {event.eventType.includes("RESOLVED") || event.eventType.includes("APPROVED") ? <CheckCircleIcon size={18} weight="fill" className="text-[var(--success)]" aria-hidden="true" /> : <ClockIcon size={18} weight="fill" className="text-[var(--info)]" aria-hidden="true" />}
-              <span><strong>{humanizeState(event.eventType)}</strong><small>{event.actorName}</small></span>
-              <time dateTime={event.timestamp}>{formatDateTime(event.timestamp)}</time>
+          <dl className="account-facts">
+            <div>
+              <dt>Member records</dt>
+              <dd>{snapshot.member.employments.length} under one UAN</dd>
             </div>
-          ))}
+            <div>
+              <dt>Last employer</dt>
+              <dd>{lastEmployment.employerName}</dd>
+            </div>
+            <div>
+              <dt>Employment status</dt>
+              <dd>Not currently PF-covered</dd>
+            </div>
+            <div>
+              <dt>Last contribution</dt>
+              <dd>{latestMonth ? formatMonth(latestMonth.contribution.month) : "None recorded"}</dd>
+            </div>
+          </dl>
         </div>
+
+        <div className="readiness-card">
+          <div className="readiness-card__head">
+            <h2>Final settlement readiness</h2>
+            <p className="tabular">
+              <strong>{readiness.passedCount}</strong>
+              <span>of {readiness.totalChecks} checks</span>
+            </p>
+          </div>
+          <ol className="readiness-issues">
+            {activeIssues.map((issue) => (
+              <li key={issue.id}>
+                <Link href={`/issues/${issue.id}`} className="readiness-issue link-row">
+                  <WarningCircleIcon size={18} weight="fill" aria-hidden="true" />
+                  <span>
+                    <strong>{issue.title}</strong>
+                    <small>{issue.userAction}</small>
+                  </span>
+                  <ArrowRightIcon size={16} aria-hidden="true" />
+                </Link>
+              </li>
+            ))}
+          </ol>
+          <Link href="/withdraw/preflight" className="text-link">
+            Review all {readiness.totalChecks} checks
+            <ArrowRightIcon size={16} aria-hidden="true" />
+          </Link>
+        </div>
+      </section>
+
+      <section className="home-section" aria-labelledby="contributions-heading">
+        <div className="home-section__head">
+          <h2 id="contributions-heading">Recent contributions</h2>
+          <Link href="/passbook" className="text-link text-link--flush">
+            View passbook
+            <ArrowRightIcon size={16} aria-hidden="true" />
+          </Link>
+        </div>
+        <ul className="mini-ledger">
+          {highlights.map(({ contribution, health }) => {
+            const attention = health.status !== "POSTED" && health.status !== "RECONCILED";
+            return (
+              <li key={contribution.id} className={attention ? "mini-ledger__row mini-ledger__row--attention" : "mini-ledger__row"}>
+                <span className="mini-ledger__month">{formatMonth(contribution.month)}</span>
+                <span className="mini-ledger__employer">{contribution.employerName}</span>
+                <span className="mini-ledger__wage tabular">Wage ₹{formatAmount(contribution.wageBasisPaise)}</span>
+                <span className="mini-ledger__amount tabular">₹{formatAmount(health.recordedTotalPaise)}</span>
+                <span className={attention ? "ledger-status ledger-status--attention" : "ledger-status"}>
+                  {contributionStatusLabel(health.status)}
+                </span>
+              </li>
+            );
+          })}
+        </ul>
+      </section>
+
+      <section className="home-section" aria-labelledby="services-heading">
+        <div className="home-section__head">
+          <h2 id="services-heading">PF services</h2>
+        </div>
+        <div className="service-directory">
+          <ul>
+            {PF_SERVICES.map((service) => (
+              <li key={service.title}>
+                <Link href={service.href} className="ledger-link link-row">
+                  <span>
+                    <strong>{service.title}</strong>
+                    <small>{service.detail}</small>
+                  </span>
+                  <ArrowRightIcon size={17} aria-hidden="true" />
+                </Link>
+              </li>
+            ))}
+          </ul>
+          <p className="service-directory__label">Account and employment</p>
+          <ul>
+            {ACCOUNT_SERVICES.map((service) => (
+              <li key={service.title}>
+                <Link href={service.href} className="ledger-link link-row">
+                  <span>
+                    <strong>{service.title}</strong>
+                    <small>{service.detail}</small>
+                  </span>
+                  <ArrowRightIcon size={17} aria-hidden="true" />
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </section>
+
+      <section className="home-section" aria-labelledby="activity-heading">
+        <div className="home-section__head">
+          <h2 id="activity-heading">Recent activity</h2>
+        </div>
+        <ul className="activity-ledger">
+          {activity.map((entry) => {
+            const Icon = TONE_ICON[entry.tone];
+            const body = (
+              <>
+                <Icon size={17} weight="fill" aria-hidden="true" />
+                <span>
+                  <strong>{entry.title}</strong>
+                  <small>{entry.detail}</small>
+                </span>
+                <time dateTime={entry.timestamp} className="tabular">{formatDateTime(entry.timestamp)}</time>
+              </>
+            );
+            return (
+              <li key={entry.id} className={`activity-entry activity-entry--${entry.tone}`}>
+                {entry.href ? (
+                  <Link href={entry.href} className="activity-entry__body link-row">{body}</Link>
+                ) : (
+                  <div className="activity-entry__body">{body}</div>
+                )}
+              </li>
+            );
+          })}
+        </ul>
       </section>
 
       <PrototypeNotice compact />

@@ -1,70 +1,185 @@
-import { ArrowRightIcon, CheckCircleIcon, WarningCircleIcon } from "@phosphor-icons/react/dist/ssr";
+import {
+  ArrowRightIcon,
+  CheckIcon,
+  LockSimpleIcon,
+  WarningCircleIcon,
+} from "@phosphor-icons/react/dist/ssr";
 import Link from "next/link";
 import { epfoService } from "@/application/service-instance";
-import { LinkButton, PageHeader, StatusBadge, buttonClassName } from "@/components/ui";
-import type { PreflightCheck } from "@/domain/schemas";
+import { LinkButton, PageHeader } from "@/components/ui";
+import type { Issue, PreflightCheck } from "@/domain/schemas";
 import { formatCurrency } from "@/lib/format";
 
-export const metadata = { title: "Form 19 preflight" };
+export const metadata = { title: "Final settlement readiness" };
 
-function CheckRow({ check, index }: { check: PreflightCheck; index: number }) {
-  const passed = check.status === "PASS";
-  const displayLabel = !passed && check.id === "EXIT_DATE_RECORDED"
-    ? "Date of Exit is missing"
-    : !passed && check.id === "LEGACY_RECORD_ALIGNED"
-      ? "Employment record needs review"
-      : check.label;
-  const nextStep = check.id === "EXIT_DATE_RECORDED"
-    ? "The record is updated and preflight reruns automatically. Readiness moves to 6 of 7 checks."
-    : "The employer reviews the proposed correction. Approval updates the record and preflight reruns automatically.";
+/** The short name each check goes by in the readiness map. */
+const MAP_LABELS: Record<PreflightCheck["id"], string> = {
+  IDENTITY_VERIFIED: "Identity",
+  AADHAAR_LINKED: "Aadhaar",
+  PAN_VERIFIED: "PAN",
+  MOBILE_VERIFIED: "Mobile",
+  BANK_VERIFIED: "Bank",
+  EXIT_DATE_RECORDED: "Date of Exit",
+  LEGACY_RECORD_ALIGNED: "Service record",
+};
+
+function ReadinessMap({ checks }: { checks: PreflightCheck[] }) {
   return (
-    <article className={passed ? "preflight-row" : "preflight-row preflight-row--blocked"}>
-      <div className="preflight-row__number tabular">{index + 1}</div>
-      <div className="preflight-row__main">
-        <div className="preflight-row__title">
-          {passed ? <CheckCircleIcon size={19} weight="fill" aria-hidden="true" /> : <WarningCircleIcon size={19} weight="fill" aria-hidden="true" />}
-          <span><strong>{displayLabel}</strong><small>{check.userExplanation}</small></span>
-        </div>
-        {!passed ? (
-          <div className="resolution-panel">
-            <dl>
-              <div><dt>What is wrong</dt><dd>{check.reason}</dd></div>
-              <div><dt>Why it matters</dt><dd>{check.userExplanation}</dd></div>
-              <div><dt>Who can resolve it</dt><dd>{check.responsibleParty}</dd></div>
-              <div><dt>Your next action</dt><dd>{check.recommendedAction}</dd></div>
-              <div className="resolution-panel__wide"><dt>What happens next</dt><dd>{nextStep}</dd></div>
-            </dl>
-            {check.issueId ? <Link href={`/issues/${check.issueId}`}>Resolve issue <ArrowRightIcon size={16} aria-hidden="true" /></Link> : null}
-          </div>
-        ) : null}
-      </div>
-      <StatusBadge status={check.status} />
-    </article>
+    <ol className="readiness-map" aria-label="Readiness across all seven checks">
+      {checks.map((check, index) => {
+        const passed = check.status === "PASS";
+        return (
+          <li key={check.id} className={passed ? "map-node map-node--done" : "map-node map-node--open"}>
+            <span className="map-node__marker" aria-hidden="true">
+              {passed ? <CheckIcon size={13} weight="bold" /> : <span className="tabular">{index + 1}</span>}
+            </span>
+            <span className="map-node__label">{MAP_LABELS[check.id]}</span>
+            <span className="sr-only">{passed ? "Complete" : "Action required"}</span>
+          </li>
+        );
+      })}
+    </ol>
   );
 }
 
 export default function PreflightPage() {
   const snapshot = epfoService.getSnapshot();
+  const { readiness, preflight } = snapshot;
+  const blockers = preflight.filter((check) => check.status !== "PASS");
+  const passed = preflight.filter((check) => check.status === "PASS");
+  const issueFor = (check: PreflightCheck): Issue | undefined =>
+    snapshot.issues.find((issue) => issue.id === check.issueId);
+
   return (
     <div className="page-shell page-shell--narrow">
-      <PageHeader eyebrow="Online Services · Form 19 preflight" title="Final PF settlement" description="Preflight checks, issue ownership, and the action required before submission." backHref="/withdraw" backLabel="Withdrawal details" />
+      <PageHeader
+        title="Final settlement readiness"
+        description="Form 19 is the application to settle your PF in full. It can be filed once every required check is complete."
+        backHref="/withdraw"
+        backLabel="Withdrawal details"
+      />
 
-      <section className="preflight-facts panel" aria-label="Claim summary">
-        <div><span>Eligible amount</span><strong className="tabular">{formatCurrency(snapshot.member.requestedWithdrawalPaise)}</strong></div>
-        <div><span>Claim type</span><strong>Final PF settlement · Form 19</strong></div>
-        <div><span>Readiness</span><strong className="tabular">{snapshot.readiness.passedCount} of {snapshot.readiness.totalChecks} checks passed</strong></div>
+      <section className="claim-anchor" aria-label="Claim summary">
+        <div className="claim-anchor__amount">
+          <p className="record-label">Eligible amount</p>
+          <p className="balance-value tabular">{formatCurrency(snapshot.member.requestedWithdrawalPaise)}</p>
+        </div>
+        <dl className="claim-anchor__facts">
+          <div>
+            <dt>Claim</dt>
+            <dd>Final PF settlement, Form 19</dd>
+          </div>
+          <div>
+            <dt>Readiness</dt>
+            <dd className="tabular">{readiness.passedCount} of {readiness.totalChecks} checks complete</dd>
+          </div>
+          <div>
+            <dt>Outstanding</dt>
+            <dd className={blockers.length > 0 ? "claim-anchor__open" : undefined}>
+              {blockers.length > 0 ? `${blockers.length} actions required` : "Nothing outstanding"}
+            </dd>
+          </div>
+        </dl>
       </section>
 
-      <section className="preflight-section">
-        <div className="section-heading-row"><div><p className="record-label">Eligibility checks</p><h2 className="section-title">Every check, in order</h2></div><p className="section-support">No hidden weights</p></div>
-        <div className="preflight-list panel">
-          {snapshot.preflight.map((check, index) => <CheckRow key={check.id} check={check} index={index} />)}
+      <ReadinessMap checks={preflight} />
+
+      <section className="preflight-columns">
+        <div className="check-list">
+          <h2>All checks</h2>
+          <ul>
+            {passed.map((check) => (
+              <li key={check.id} className="check-line check-line--done">
+                <CheckIcon size={15} weight="bold" aria-hidden="true" />
+                <span>{check.label}</span>
+                <em>Complete</em>
+              </li>
+            ))}
+            {blockers.map((check) => (
+              <li key={check.id} className="check-line check-line--open">
+                <WarningCircleIcon size={15} weight="fill" aria-hidden="true" />
+                <span>{check.label}</span>
+                <em>Action required</em>
+              </li>
+            ))}
+          </ul>
+          <details className="readiness-explainer">
+            <summary>How readiness is decided</summary>
+            <p>
+              Readiness is {readiness.passedCount} of {readiness.totalChecks} because every check counts once and
+              counts equally. Form 19 opens when all {readiness.totalChecks} are complete.
+            </p>
+          </details>
+          <p className="check-list__note">
+            {blockers.length > 0
+              ? `Once both actions are complete, Form 19 unlocks and the settlement moves to review.`
+              : "Every check is complete, so Form 19 can be filed."}
+          </p>
+        </div>
+
+        <div className="next-actions">
+          <h2>{blockers.length > 0 ? "What needs to happen next" : "Nothing left to resolve"}</h2>
+          {blockers.map((check, index) => {
+            const issue = issueFor(check);
+            const from = readiness.passedCount + index;
+            return (
+              <article key={check.id} className="action-item">
+                <div className="action-item__head">
+                  <span className="action-item__step tabular" aria-hidden="true">{index + 1}</span>
+                  <div>
+                    <h3>{issue?.title ?? check.label}</h3>
+                    <p>{check.reason}</p>
+                  </div>
+                </div>
+                <dl className="action-item__grid">
+                  <div>
+                    <dt>Why it matters</dt>
+                    <dd>{issue?.whyItMatters ?? "This check is required before Form 19 can be filed."}</dd>
+                  </div>
+                  <div>
+                    <dt>Who can resolve it</dt>
+                    <dd>{check.responsibleParty}</dd>
+                  </div>
+                  <div>
+                    <dt>Your next action</dt>
+                    <dd>{check.recommendedAction}</dd>
+                  </div>
+                  <div>
+                    <dt>What happens next</dt>
+                    <dd className="tabular">
+                      Readiness moves from {from} of {readiness.totalChecks} to {from + 1} of {readiness.totalChecks}.
+                    </dd>
+                  </div>
+                </dl>
+                {check.issueId ? (
+                  <Link href={`/issues/${check.issueId}`} className="action-item__link">
+                    Resolve this check
+                    <ArrowRightIcon size={16} aria-hidden="true" />
+                  </Link>
+                ) : null}
+              </article>
+            );
+          })}
         </div>
       </section>
 
-      <section className={snapshot.readiness.isReady ? "preflight-decision preflight-decision--ready" : "preflight-decision"}>
-        <div>{snapshot.readiness.isReady ? <CheckCircleIcon size={21} weight="fill" aria-hidden="true" /> : <WarningCircleIcon size={21} weight="fill" aria-hidden="true" />}<p><strong className="tabular">{snapshot.readiness.passedCount} of {snapshot.readiness.totalChecks} checks passed</strong><span>{snapshot.readiness.isReady ? "All required checks are complete." : `${snapshot.readiness.attentionCount} issues must be resolved before this claim can continue.`}</span></p></div>
-        {snapshot.readiness.isReady ? <LinkButton href="/withdraw/review">Continue to claim</LinkButton> : <button type="button" disabled className={buttonClassName("primary")}>Continue to claim</button>}
+      <section className={readiness.isReady ? "decision-bar decision-bar--ready" : "decision-bar"}>
+        <p>
+          <strong className="tabular">{readiness.passedCount} of {readiness.totalChecks} checks complete</strong>
+          <span id="decision-reason">
+            {readiness.isReady
+              ? "Form 19 is ready to file."
+              : `Form 19 stays locked until the remaining ${readiness.attentionCount} checks are resolved.`}
+          </span>
+        </p>
+        {readiness.isReady ? (
+          <LinkButton href="/withdraw/review">Continue to claim</LinkButton>
+        ) : (
+          <button type="button" aria-disabled="true" aria-describedby="decision-reason" className="locked-button">
+            <LockSimpleIcon size={16} weight="fill" aria-hidden="true" />
+            Continue to claim
+          </button>
+        )}
       </section>
     </div>
   );
