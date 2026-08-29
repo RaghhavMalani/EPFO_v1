@@ -12,7 +12,7 @@ export default function MarkExitPage() {
   const employment = snapshot.member.employments.find((record) => record.id === issue.relatedEmploymentId)!;
 
   return (
-    <div className="mx-auto max-w-5xl px-4 py-10 sm:px-6 sm:py-14">
+    <div className="page-shell page-shell--narrow">
       <PageHeader
         eyebrow="Manage · Employment details"
         title="Mark Date of Exit"

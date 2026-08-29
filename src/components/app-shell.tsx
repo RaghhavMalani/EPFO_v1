@@ -1,45 +1,79 @@
-import Link from "next/link";
+"use client";
 
-const navigation = [
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+
+const memberNavigation = [
   { href: "/", label: "Home" },
-  { href: "/member", label: "View" },
+  { href: "/passbook", label: "Passbook" },
+  { href: "/member", label: "Employment", mobileLabel: "Jobs" },
+  { href: "/online-services", label: "Services" },
   { href: "/manage", label: "Manage" },
-  { href: "/online-services", label: "Online Services" },
-  { href: "/employer", label: "Employer workspace" },
 ];
 
-export function AppHeader() {
+const employerNavigation = [
+  { href: "/employer", label: "Overview" },
+  { href: "/employer#members", label: "Members" },
+  { href: "/employer#establishment", label: "Establishment", mobileHidden: true },
+  { href: "/employer#payments", label: "Payments", mobileHidden: true },
+  { href: "/employer/requests", label: "Requests" },
+  { href: "/employer#reports", label: "Reports", mobileHidden: true },
+];
+
+function isCurrent(pathname: string, href: string) {
+  const path = href.split("#")[0];
+  if (path === "/") return pathname === "/";
+  if (path === "/employer") return pathname === "/employer";
+  return pathname === path || pathname.startsWith(`${path}/`);
+}
+
+export type MemberIdentity = { name: string; uanMasked: string };
+
+export function AppHeader({ member }: { member: MemberIdentity }) {
+  const pathname = usePathname();
+  const isEmployer = pathname.startsWith("/employer");
+  const navigation = isEmployer ? employerNavigation : memberNavigation;
+
   return (
     <>
-      <div className="border-b border-[var(--line)] bg-[var(--safety)] px-4 py-2 text-center text-xs font-medium text-[var(--muted)]">
-        Independent hackathon prototype · Synthetic data only
-      </div>
-      <header className="sticky top-0 z-20 border-b border-[var(--line)] bg-[color:var(--canvas)/0.94] backdrop-blur-md">
-        <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-5 px-4 sm:px-6">
-          <Link
-            href="/"
-            className="flex shrink-0 items-center gap-2.5 rounded-lg font-semibold tracking-[-0.02em] text-[var(--ink)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]"
-          >
-            <span className="grid size-8 place-items-center rounded-[10px] bg-[var(--accent-fill)] text-xs font-bold text-white">
-              E1
-            </span>
-            <span>EPFO One</span>
-          </Link>
-          <nav aria-label="Primary" className="overflow-x-auto">
-            <ul className="flex min-w-max items-center gap-1">
-              {navigation.map((item) => (
-                <li key={item.href}>
-                  <Link
-                    href={item.href}
-                    className="block rounded-lg px-3 py-2 text-sm font-medium text-[var(--muted)] transition-colors hover:bg-[var(--surface-muted)] hover:text-[var(--ink)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]"
-                  >
-                    {item.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </nav>
+      <a href="#main-content" className="skip-link">Skip to main content</a>
+      <header className={isEmployer ? "app-header app-header--employer" : "app-header"}>
+        <div className="app-identity">
+          <div className="shell-width app-identity__inner">
+            <Link href={isEmployer ? "/employer" : "/"} className="brand-link" aria-label="EPFO One home">
+              <span className="brand-mark" aria-hidden="true">E1</span>
+              <span className="brand-name">EPFO ONE</span>
+            </Link>
+            <span className="brand-divider" aria-hidden="true" />
+            <p className="brand-context">{isEmployer ? "Employer services" : "Independent redesign of Unified Member Services"}</p>
+            <div className="identity-meta">
+              {isEmployer ? (
+                <>
+                  <div><strong>Demo Systems Pvt Ltd</strong><span>Establishment ID · DLCPM••••6789</span></div>
+                  <Link href="/" className="role-switch">Switch to member</Link>
+                </>
+              ) : (
+                <>
+                  <div><strong>{member.name}</strong><span>UAN · {member.uanMasked}</span></div>
+                  <Link href="/employer" className="role-switch">Employer role</Link>
+                </>
+              )}
+            </div>
+          </div>
         </div>
+        <nav aria-label={isEmployer ? "Employer" : "Member"} className="app-navigation">
+          <div className="shell-width app-navigation__scroller">
+            {navigation.map((item) => {
+              const current = isCurrent(pathname, item.href);
+              return (
+                <Link key={`${item.href}-${item.label}`} href={item.href} className={`${current ? "nav-link nav-link--current" : "nav-link"}${"mobileHidden" in item && item.mobileHidden ? " nav-link--mobile-hidden" : ""}`} aria-current={current ? "page" : undefined}>
+                  <span className="nav-label--desktop">{item.label}</span>
+                  <span className="nav-label--mobile">{"mobileLabel" in item ? item.mobileLabel : item.label}</span>
+                </Link>
+              );
+            })}
+          </div>
+        </nav>
       </header>
     </>
   );
@@ -47,15 +81,10 @@ export function AppHeader() {
 
 export function AppFooter() {
   return (
-    <footer className="mt-16 border-t border-[var(--line)]">
-      <div className="mx-auto grid max-w-6xl gap-4 px-4 py-8 text-sm text-[var(--muted)] sm:px-6 md:grid-cols-[1fr_auto]">
-        <div>
-          <p className="font-semibold text-[var(--ink)]">EPFO One</p>
-          <p className="mt-1">Know before you claim. Fix before you fail. Track until you&apos;re paid.</p>
-        </div>
-        <p className="max-w-md md:text-right">
-          Independent hackathon prototype · Synthetic data only. No government, bank, Aadhaar, PAN, employer, or OTP systems are connected.
-        </p>
+    <footer className="app-footer">
+      <div className="shell-width app-footer__inner">
+        <p><strong>EPFO ONE</strong> · Independent prototype</p>
+        <p>Synthetic data only · No government, bank, Aadhaar, PAN, employer, or OTP systems are connected.</p>
       </div>
     </footer>
   );

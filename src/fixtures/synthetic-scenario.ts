@@ -1,9 +1,10 @@
-import { AppStateSchema, type AppState } from "@/domain/schemas";
+import { AppStateSchema, MemberSchema, type AppState } from "@/domain/schemas";
+import { createExperienceV2Scenario } from "@/fixtures/experience-v2-scenario";
 
 const CREATED_AT = "2026-08-26T05:01:00.000Z";
 
 export function createSyntheticScenario(): AppState {
-  return AppStateSchema.parse({
+  const scenario = {
     member: {
       id: "member-aarav",
       name: "Aarav Sharma",
@@ -25,6 +26,24 @@ export function createSyntheticScenario(): AppState {
         uanIssuedBeforeProfileCutoff: false,
       },
       employments: [
+        {
+          // An old PF account that was never consolidated. Its balance sits outside
+          // `currentPfBalancePaise` until the synthetic Form 13 transfer completes.
+          id: "employment-demo-logistics",
+          memberRecordLabel: "MID-•••-0461",
+          employerName: "Demo Logistics Pvt Ltd",
+          employmentStart: "2017-05-02",
+          employmentEnd: "2019-03-25",
+          isCurrent: false,
+          pfRecordStatus: "CLOSED",
+          exitStatus: "VERIFIED",
+          pfRecordExitDate: "2019-03-25",
+          pfBalancePaise: 4_120_000,
+          transferredAmountPaise: 0,
+          transferStatus: "NOT_TRANSFERRED",
+          legacyRecordStatus: "ALIGNED",
+          serviceEndReason: "RESIGNATION",
+        },
         {
           id: "employment-demo-retail",
           memberRecordLabel: "MID-•••-1024",
@@ -232,5 +251,9 @@ export function createSyntheticScenario(): AppState {
         metadata: { resolutionType: "EMPLOYER_ACTION" },
       },
     ],
+  };
+  return AppStateSchema.parse({
+    ...scenario,
+    experience: createExperienceV2Scenario(MemberSchema.parse(scenario.member)),
   });
 }

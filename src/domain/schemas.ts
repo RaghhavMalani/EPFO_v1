@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { ExperienceV2StateSchema } from "@/domain/experience-v2";
 
 export const VerificationStatusSchema = z.enum(["VERIFIED", "MISSING"]);
 export const TransferStatusSchema = z.enum(["NOT_TRANSFERRED", "TRANSFERRED"]);
@@ -24,7 +25,8 @@ export const MemberSchema = z.object({
   id: z.string(),
   name: z.string(),
   uanMasked: z.string(),
-  currentPfBalancePaise: z.number().int().positive(),
+  // A fully drawn-down synthetic account is legitimate, so zero is allowed.
+  currentPfBalancePaise: z.number().int().nonnegative(),
   requestedWithdrawalPaise: z.number().int().positive(),
   employmentStatus: z.literal("NOT_EMPLOYED_IN_PF_ESTABLISHMENT"),
   identity: z.object({
@@ -199,6 +201,10 @@ export const AuditEventSchema = z.object({
     "EMPLOYER_REQUEST",
     "CLAIM",
     "PAYMENT",
+    "CONTRIBUTION",
+    "ADVANCE",
+    "TRANSFER",
+    "ECR",
   ]),
   aggregateId: z.string(),
   eventType: z.string(),
@@ -215,6 +221,7 @@ export const AppStateSchema = z.object({
   employerRequests: z.array(EmployerRequestSchema),
   claim: ClaimSchema,
   auditEvents: z.array(AuditEventSchema),
+  experience: ExperienceV2StateSchema,
 });
 
 export type EmploymentRecord = z.infer<typeof EmploymentRecordSchema>;

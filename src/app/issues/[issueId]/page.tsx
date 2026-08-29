@@ -1,4 +1,4 @@
-import { ArrowRightIcon, BuildingsIcon, ClockIcon, InfoIcon, UserIcon } from "@phosphor-icons/react/dist/ssr";
+import { InfoIcon } from "@phosphor-icons/react/dist/ssr";
 import { notFound } from "next/navigation";
 import { epfoService } from "@/application/service-instance";
 import { ActionButton } from "@/components/action-button";
@@ -35,13 +35,13 @@ export default async function IssuePage({ params }: { params: Promise<{ issueId:
   const nextAction = issue.status === "RESOLVED" ? "Return to Claim Preflight." : request?.status === "INFORMATION_REQUESTED" ? "Supply synthetic context and resubmit." : route.requiredAction;
 
   return (
-    <div className="mx-auto max-w-5xl px-4 py-10 sm:px-6 sm:py-14">
+    <div className="page-shell page-shell--narrow">
       <PageHeader eyebrow="Readiness issue" title={issue.title} description={issue.description} backHref="/withdraw/preflight" backLabel="Claim Preflight" aside={<StatusBadge status={issue.status} />} />
-      <section className="grid gap-4 py-8 sm:grid-cols-2 lg:grid-cols-4">
-        <div className="rounded-2xl border border-[var(--line)] bg-[var(--surface)] p-5"><ArrowRightIcon size={21} className="text-[var(--accent)]" aria-hidden="true" /><p className="mt-4 text-xs font-semibold text-[var(--muted)]">Resolution route</p><p className="mt-1 text-sm font-semibold">{humanizeState(route.resolutionType)}</p></div>
-        <div className="rounded-2xl border border-[var(--line)] bg-[var(--surface)] p-5"><BuildingsIcon size={21} className="text-[var(--accent)]" aria-hidden="true" /><p className="mt-4 text-xs font-semibold text-[var(--muted)]">Who is acting now</p><p className="mt-1 text-sm font-semibold">{currentActor}</p></div>
-        <div className="rounded-2xl border border-[var(--line)] bg-[var(--surface)] p-5"><UserIcon size={21} className="text-[var(--accent)]" aria-hidden="true" /><p className="mt-4 text-xs font-semibold text-[var(--muted)]">Member action now</p><p className="mt-1 text-sm font-semibold">{issue.status === "WAITING_EXTERNAL" ? "Nothing required" : issue.userAction}</p></div>
-        <div className="rounded-2xl border border-[var(--line)] bg-[var(--surface)] p-5"><ClockIcon size={21} className="text-[var(--accent)]" aria-hidden="true" /><p className="mt-4 text-xs font-semibold text-[var(--muted)]">What happens next</p><p className="mt-1 text-sm font-semibold">{nextAction}</p></div>
+      <section className="issue-route panel">
+        <div><p>Resolution route</p><strong>{humanizeState(route.resolutionType)}</strong></div>
+        <div><p>Who is acting now</p><strong>{currentActor}</strong></div>
+        <div><p>Member action now</p><strong>{issue.status === "WAITING_EXTERNAL" ? "Nothing required" : issue.userAction}</strong></div>
+        <div><p>What happens next</p><strong>{nextAction}</strong></div>
       </section>
       <div className="grid gap-8 py-3 lg:grid-cols-[1.1fr_0.9fr]">
         <div className="space-y-5">

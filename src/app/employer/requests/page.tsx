@@ -6,21 +6,36 @@ import { formatDateTime } from "@/lib/format";
 
 export const metadata = { title: "Employer requests" };
 
-export default function EmployerRequestsPage() {
+export default async function EmployerRequestsPage({ searchParams }: { searchParams: Promise<{ status?: string }> }) {
   const snapshot = epfoService.getSnapshot();
+  const { status = "all" } = await searchParams;
+  const actionable = snapshot.employerRequests.filter((request) => request.status === "AWAITING_REVIEW" || request.status === "IN_REVIEW").length;
+  const filteredRequests = snapshot.employerRequests.filter((request) => {
+    if (status === "action") return request.status === "AWAITING_REVIEW" || request.status === "IN_REVIEW";
+    if (status === "processed") return request.status === "APPROVED" || request.status === "REJECTED";
+    return true;
+  });
   return (
-    <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6 sm:py-14">
-      <PageHeader eyebrow="Employer workspace" title="Member requests" description="Review synthetic member record changes with an explicit status and next action." backHref="/employer" backLabel="Employer home" />
-      <section className="py-9">
-        <div className="overflow-hidden rounded-2xl border border-[var(--line)] bg-[var(--surface)]">
-          {snapshot.employerRequests.map((request, index) => (
-            <Link key={request.id} href={`/employer/requests/${request.id}`} className={`grid gap-4 p-5 sm:grid-cols-[1fr_0.55fr_auto] sm:items-center sm:p-6 ${index > 0 ? "border-t border-[var(--line)]" : ""}`}>
-              <div><p className="font-semibold">{request.memberName}</p><p className="mt-1 text-sm text-[var(--muted)]">{request.title} · {request.relatedJourney}</p></div>
-              <div><p className="text-xs text-[var(--muted)]">Submitted</p><p className="mt-1 text-sm font-semibold">{formatDateTime(request.submittedAt)}</p></div>
-              <div className="flex items-center gap-3"><StatusBadge status={request.status} /><ArrowRightIcon size={18} className="text-[var(--accent)]" aria-hidden="true" /></div>
-            </Link>
-          ))}
+    <div className="page-shell employer-page">
+      <PageHeader eyebrow="Requests" title="Member requests" description="Compare records, assess the related member journey, and record a traceable decision." backHref="/employer" backLabel="Employer overview" aside={<p className="queue-total"><strong className="tabular">{actionable}</strong><span>need action</span></p>} />
+      <div className="queue-toolbar" aria-label="Queue filters">
+        <div className="queue-filters">
+          {[["all", "All"], ["action", "Needs action"], ["processed", "Processed"]].map(([value, label]) => <Link key={value} href={value === "all" ? "/employer/requests" : `/employer/requests?status=${value}`} className={status === value ? "queue-filter queue-filter--active" : "queue-filter"} aria-current={status === value ? "page" : undefined}>{label}</Link>)}
         </div>
+        <p>{filteredRequests.length} shown · Oldest actionable first</p>
+      </div>
+      <section className="request-table request-table--full panel" aria-label="Member request queue">
+        <div className="request-table__head" aria-hidden="true"><span>Member</span><span>Request</span><span>Journey</span><span>Submitted</span><span>Status</span><span>Action</span></div>
+        {filteredRequests.map((request) => (
+          <Link key={request.id} href={`/employer/requests/${request.id}`} className="request-row link-row">
+            <div data-label="Member"><strong>{request.memberName}</strong><small>{request.id}</small></div>
+            <div data-label="Request"><strong>{request.title}</strong><small>{request.requestType.replaceAll("_", " ").toLowerCase()}</small></div>
+            <div data-label="Journey"><span>{request.relatedJourney}</span></div>
+            <div data-label="Submitted"><span className="tabular">{formatDateTime(request.submittedAt)}</span></div>
+            <div data-label="Status"><StatusBadge status={request.status} /></div>
+            <div className="request-action">Review <ArrowRightIcon size={15} aria-hidden="true" /></div>
+          </Link>
+        ))}
       </section>
     </div>
   );

@@ -1,132 +1,195 @@
 import {
   ArrowRightIcon,
-  ArrowsLeftRightIcon,
-  BriefcaseIcon,
   CheckCircleIcon,
   ClockIcon,
-  MagnifyingGlassIcon,
-  PiggyBankIcon,
-  WrenchIcon,
+  WarningCircleIcon,
 } from "@phosphor-icons/react/dist/ssr";
 import Link from "next/link";
-import { epfoService } from "@/application/service-instance";
-import { PrototypeNotice, StatusBadge } from "@/components/ui";
-import { formatCurrency, formatDateTime, humanizeState } from "@/lib/format";
+import { epfoService, experienceV2Service } from "@/application/service-instance";
+import { LinkButton, PrototypeNotice } from "@/components/ui";
+import { buildMemberActivity, type ActivityTone } from "@/domain/activity-feed";
+import { contributionStatusLabel, selectPassbookHighlights } from "@/domain/contribution-health";
+import { formatAmount, formatCurrency, formatDateTime, formatMonth } from "@/lib/format";
 
-const quickGoals = [
-  { href: "/withdraw", label: "Withdraw my PF", Icon: PiggyBankIcon },
-  { href: "/online-services", label: "I changed jobs", Icon: ArrowsLeftRightIcon },
-  { href: "/claims/claim-demo-001", label: "Track a claim", Icon: MagnifyingGlassIcon },
-  { href: "/manage", label: "Manage my account", Icon: WrenchIcon },
+const PF_SERVICES = [
+  { title: "Withdraw PF", detail: "Final settlement under Form 19", href: "/withdraw" },
+  { title: "Take an advance", detail: "Partial withdrawal for a specific purpose", href: "/online-services" },
+  { title: "Transfer PF", detail: "Consolidate a previous PF account", href: "/online-services" },
 ];
+
+const ACCOUNT_SERVICES = [
+  { title: "Service history", detail: "Every employment record under this UAN", href: "/member" },
+  { title: "Manage records", detail: "Exit dates, profile and account details", href: "/manage" },
+];
+
+const TONE_ICON: Record<ActivityTone, typeof CheckCircleIcon> = {
+  attention: WarningCircleIcon,
+  progress: ClockIcon,
+  complete: CheckCircleIcon,
+};
 
 export default function HomePage() {
   const snapshot = epfoService.getSnapshot();
-  const lastEmployment = snapshot.member.employments.at(-1)!;
+  const passbook = experienceV2Service.getPassbook();
+  const highlights = selectPassbookHighlights(passbook);
+  const activity = buildMemberActivity(snapshot, 4);
   const activeIssues = snapshot.issues.filter((issue) => issue.status !== "RESOLVED");
-  const currentRequest = snapshot.employerRequests.find((request) => request.memberId === snapshot.member.id);
+  const lastEmployment = snapshot.member.employments.at(-1)!;
+  const latestMonth = passbook.months.at(-1);
+  const { readiness } = snapshot;
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6 sm:py-14">
-      <section className="grid gap-8 border-b border-[var(--line)] pb-10 lg:grid-cols-[1.2fr_0.8fr] lg:items-end">
+    <div className="page-shell">
+      <header className="home-masthead">
         <div>
-          <p className="text-xs font-bold uppercase tracking-[0.16em] text-[var(--accent)]">Member home</p>
-          <h1 className="mt-4 text-4xl font-semibold tracking-[-0.045em] sm:text-5xl">Good afternoon, Aarav.</h1>
-          <p className="mt-4 max-w-xl text-lg leading-8 text-[var(--muted)]">
-            Your PF view brings one masked UAN, three member records, services, and requests into one guided workspace.
-          </p>
+          <h1>Good afternoon, {snapshot.member.name.split(" ")[0]}.</h1>
+          <p>Your PF position, what changed recently, and anything that needs you.</p>
         </div>
-        <div className="rounded-2xl bg-[var(--accent-fill)] p-6 text-white sm:p-7">
-          <p className="text-sm text-white/75">Total synthetic PF balance</p>
-          <p className="mt-2 text-4xl font-semibold tracking-[-0.04em]">{formatCurrency(snapshot.member.currentPfBalancePaise)}</p>
-          <div className="mt-5 flex items-center gap-2 text-sm text-white/80">
-            <BriefcaseIcon size={18} aria-hidden="true" />
-            <span>Last employer: {lastEmployment.employerName}</span>
-          </div>
-          <p className="mt-2 text-sm font-medium text-white">Not currently employed in a PF-covered establishment</p>
-        </div>
-      </section>
+        <LinkButton href="/online-services">Open PF services</LinkButton>
+      </header>
 
-      <section className="grid gap-5 py-9 lg:grid-cols-[0.82fr_1.18fr]">
-        <article className="rounded-2xl border border-[var(--line)] bg-[var(--surface)] p-6 sm:p-7">
-          <div className="flex items-start justify-between gap-5">
+      <section className="account-band" aria-label="Provident fund position">
+        <div className="account-band__balance">
+          <p className="record-label">Available PF balance</p>
+          <p className="balance-value tabular">{formatCurrency(snapshot.member.currentPfBalancePaise)}</p>
+          <dl className="account-facts">
             <div>
-              <p className="text-sm font-semibold text-[var(--muted)]">Account health</p>
-              <p className="mt-2 text-5xl font-semibold tracking-[-0.05em]">{snapshot.readiness.percentage}%</p>
-              <p className="mt-2 text-sm font-semibold">{snapshot.readiness.passedCount} of {snapshot.readiness.totalChecks} checks ready</p>
+              <dt>Member records</dt>
+              <dd>{snapshot.member.employments.length} under one UAN</dd>
             </div>
-            <span className="grid size-11 place-items-center rounded-xl bg-[var(--accent-soft)] text-[var(--accent)]">
-              <CheckCircleIcon size={24} weight="fill" aria-hidden="true" />
-            </span>
-          </div>
-          <div className="mt-6 h-2 overflow-hidden rounded-full bg-[var(--surface-muted)]" aria-hidden="true">
-            <div className="h-full rounded-full bg-[var(--accent-fill)]" style={{ width: `${snapshot.readiness.percentage}%` }} />
-          </div>
-          <Link href="/withdraw/preflight" className="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-[var(--accent)] hover:underline">
-            View all seven checks <ArrowRightIcon size={17} aria-hidden="true" />
-          </Link>
-        </article>
+            <div>
+              <dt>Last employer</dt>
+              <dd>{lastEmployment.employerName}</dd>
+            </div>
+            <div>
+              <dt>Employment status</dt>
+              <dd>Not currently PF-covered</dd>
+            </div>
+            <div>
+              <dt>Last contribution</dt>
+              <dd>{latestMonth ? formatMonth(latestMonth.contribution.month) : "None recorded"}</dd>
+            </div>
+          </dl>
+        </div>
 
-        <article className="rounded-2xl border border-[var(--line)] bg-[var(--surface)] p-6 sm:p-7">
-          <div className="flex items-center justify-between gap-4">
-            <h2 className="text-xl font-semibold">Active requests</h2>
-            <span className="text-sm text-[var(--muted)]">{activeIssues.length} need action</span>
+        <div className="readiness-card">
+          <div className="readiness-card__head">
+            <h2>Final settlement readiness</h2>
+            <p className="tabular">
+              <strong>{readiness.passedCount}</strong>
+              <span>of {readiness.totalChecks} checks</span>
+            </p>
           </div>
-          <div className="mt-5 divide-y divide-[var(--line)]">
+          <ol className="readiness-issues">
             {activeIssues.map((issue) => (
-              <Link key={issue.id} href={`/issues/${issue.id}`} className="grid gap-3 py-4 first:pt-0 sm:grid-cols-[1fr_auto] sm:items-center">
-                <div>
-                  <p className="font-semibold">{issue.title}</p>
-                  <p className="mt-1 text-sm text-[var(--muted)]">Next: {issue.userAction}</p>
-                </div>
-                <StatusBadge status={issue.status} />
-              </Link>
+              <li key={issue.id}>
+                <Link href={`/issues/${issue.id}`} className="readiness-issue link-row">
+                  <WarningCircleIcon size={18} weight="fill" aria-hidden="true" />
+                  <span>
+                    <strong>{issue.title}</strong>
+                    <small>{issue.userAction}</small>
+                  </span>
+                  <ArrowRightIcon size={16} aria-hidden="true" />
+                </Link>
+              </li>
             ))}
-            {currentRequest ? (
-              <Link href={`/employer/requests/${currentRequest.id}`} className="grid gap-3 py-4 sm:grid-cols-[1fr_auto] sm:items-center">
-                <div>
-                  <p className="font-semibold">Employer review: {currentRequest.title}</p>
-                  <p className="mt-1 text-sm text-[var(--muted)]">Responsible: Demo Systems Pvt Ltd</p>
-                </div>
-                <StatusBadge status={currentRequest.status} />
-              </Link>
-            ) : null}
-          </div>
-        </article>
-      </section>
-
-      <section className="py-6">
-        <h2 className="text-2xl font-semibold tracking-[-0.025em]">Quick goals</h2>
-        <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {quickGoals.map(({ href, label, Icon }) => (
-            <Link key={label} href={href} className="rounded-2xl border border-[var(--line)] bg-[var(--surface)] p-5 transition-[border-color,transform] hover:-translate-y-0.5 hover:border-[var(--line-strong)]">
-              <Icon size={24} className="text-[var(--accent)]" aria-hidden="true" />
-              <p className="mt-5 font-semibold">{label}</p>
-            </Link>
-          ))}
+          </ol>
+          <Link href="/withdraw/preflight" className="text-link">
+            Review all {readiness.totalChecks} checks
+            <ArrowRightIcon size={16} aria-hidden="true" />
+          </Link>
         </div>
       </section>
 
-      <section className="grid gap-5 py-9 lg:grid-cols-2">
-        <article className="rounded-2xl border border-[var(--line)] bg-[var(--surface)] p-6">
-          <h2 className="text-xl font-semibold">Claim activity</h2>
-          <Link href={`/claims/${snapshot.claim.id}`} className="mt-5 flex items-start justify-between gap-4 rounded-xl bg-[var(--surface-muted)] p-4">
-            <div>
-              <p className="font-semibold">Final PF settlement · Form 19</p>
-              <p className="mt-1 text-sm text-[var(--muted)]">{formatCurrency(snapshot.claim.requestedAmountPaise)} · {humanizeState(snapshot.claim.state)}</p>
-            </div>
-            <ClockIcon size={21} className="text-[var(--accent)]" aria-hidden="true" />
+      <section className="home-section" aria-labelledby="contributions-heading">
+        <div className="home-section__head">
+          <h2 id="contributions-heading">Recent contributions</h2>
+          <Link href="/passbook" className="text-link text-link--flush">
+            View passbook
+            <ArrowRightIcon size={16} aria-hidden="true" />
           </Link>
-        </article>
-        <article className="rounded-2xl border border-[var(--line)] bg-[var(--surface)] p-6">
-          <h2 className="text-xl font-semibold">Recent account activity</h2>
-          {snapshot.auditEvents.slice(-2).toReversed().map((event) => (
-            <div key={event.id} className="mt-4 border-t border-[var(--line)] pt-4 first:border-0 first:pt-0">
-              <p className="text-sm font-semibold">{humanizeState(event.eventType)}</p>
-              <p className="mt-1 text-xs text-[var(--muted)]">{event.actorName} · {formatDateTime(event.timestamp)}</p>
-            </div>
-          ))}
-        </article>
+        </div>
+        <ul className="mini-ledger">
+          {highlights.map(({ contribution, health }) => {
+            const attention = health.status !== "POSTED" && health.status !== "RECONCILED";
+            return (
+              <li key={contribution.id} className={attention ? "mini-ledger__row mini-ledger__row--attention" : "mini-ledger__row"}>
+                <span className="mini-ledger__month">{formatMonth(contribution.month)}</span>
+                <span className="mini-ledger__employer">{contribution.employerName}</span>
+                <span className="mini-ledger__wage tabular">Wage ₹{formatAmount(contribution.wageBasisPaise)}</span>
+                <span className="mini-ledger__amount tabular">₹{formatAmount(health.recordedTotalPaise)}</span>
+                <span className={attention ? "ledger-status ledger-status--attention" : "ledger-status"}>
+                  {contributionStatusLabel(health.status)}
+                </span>
+              </li>
+            );
+          })}
+        </ul>
+      </section>
+
+      <section className="home-section" aria-labelledby="services-heading">
+        <div className="home-section__head">
+          <h2 id="services-heading">PF services</h2>
+        </div>
+        <div className="service-directory">
+          <ul>
+            {PF_SERVICES.map((service) => (
+              <li key={service.title}>
+                <Link href={service.href} className="ledger-link link-row">
+                  <span>
+                    <strong>{service.title}</strong>
+                    <small>{service.detail}</small>
+                  </span>
+                  <ArrowRightIcon size={17} aria-hidden="true" />
+                </Link>
+              </li>
+            ))}
+          </ul>
+          <p className="service-directory__label">Account and employment</p>
+          <ul>
+            {ACCOUNT_SERVICES.map((service) => (
+              <li key={service.title}>
+                <Link href={service.href} className="ledger-link link-row">
+                  <span>
+                    <strong>{service.title}</strong>
+                    <small>{service.detail}</small>
+                  </span>
+                  <ArrowRightIcon size={17} aria-hidden="true" />
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </section>
+
+      <section className="home-section" aria-labelledby="activity-heading">
+        <div className="home-section__head">
+          <h2 id="activity-heading">Recent activity</h2>
+        </div>
+        <ul className="activity-ledger">
+          {activity.map((entry) => {
+            const Icon = TONE_ICON[entry.tone];
+            const body = (
+              <>
+                <Icon size={17} weight="fill" aria-hidden="true" />
+                <span>
+                  <strong>{entry.title}</strong>
+                  <small>{entry.detail}</small>
+                </span>
+                <time dateTime={entry.timestamp} className="tabular">{formatDateTime(entry.timestamp)}</time>
+              </>
+            );
+            return (
+              <li key={entry.id} className={`activity-entry activity-entry--${entry.tone}`}>
+                {entry.href ? (
+                  <Link href={entry.href} className="activity-entry__body link-row">{body}</Link>
+                ) : (
+                  <div className="activity-entry__body">{body}</div>
+                )}
+              </li>
+            );
+          })}
+        </ul>
       </section>
 
       <PrototypeNotice compact />

@@ -26,7 +26,7 @@ export default async function ClaimPage({ params }: { params: Promise<{ claimId:
   const currentEntry = claim.stateHistory.findLast((entry) => entry.state === claim.state);
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6 sm:py-14">
+    <div className="page-shell">
       <PageHeader
         eyebrow="Synthetic claim · Form 19"
         title={`${formatCurrency(claim.requestedAmountPaise)} final PF settlement`}
