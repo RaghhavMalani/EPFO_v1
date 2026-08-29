@@ -11,16 +11,16 @@ const groups = [
     description: "File or track eligible benefit claims.",
     services: [
       { title: "Final PF settlement", detail: "Form 19 · Run seven checks before filing", href: "/withdraw", status: "Available" },
-      { title: "PF advance", detail: "Form 31 · Prototype preview", status: "Preview" },
+      { title: "PF advance", detail: "Form 31 · Goal-based partial withdrawal", href: "/advance", status: "Available" },
       { title: "Pension withdrawal benefit", detail: "Form 10C · Prototype preview", status: "Preview" },
-      { title: "Track a claim", detail: "Current party, status, and next action", href: "/claims/claim-demo-001", status: "Available" },
+      { title: "Track a claim", detail: "Active and past claims in one ledger", href: "/claims", status: "Available" },
     ],
   },
   {
     title: "Employment and transfers",
     description: "Keep service records aligned across employers.",
     services: [
-      { title: "Transfer PF after changing jobs", detail: "Form 13 · Prototype preview", status: "Preview" },
+      { title: "Transfer PF after changing jobs", detail: "Form 13 · Consolidate a previous PF account", href: "/transfer", status: "Available" },
       { title: "Mark Date of Exit", detail: "Member self-service for an eligible exit", href: "/manage/mark-exit", status: "Available" },
       { title: "Service history", detail: "Review all member records under this UAN", href: "/member", status: "Available" },
     ],

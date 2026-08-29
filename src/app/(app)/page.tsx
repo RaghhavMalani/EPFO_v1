@@ -13,8 +13,8 @@ import { formatAmount, formatCurrency, formatDateTime, formatMonth } from "@/lib
 
 const PF_SERVICES = [
   { title: "Withdraw PF", detail: "Final settlement under Form 19", href: "/withdraw" },
-  { title: "Take an advance", detail: "Partial withdrawal for a specific purpose", href: "/online-services" },
-  { title: "Transfer PF", detail: "Consolidate a previous PF account", href: "/online-services" },
+  { title: "Take an advance", detail: "Partial withdrawal for a specific purpose", href: "/advance" },
+  { title: "Transfer PF", detail: "Consolidate a previous PF account", href: "/transfer" },
 ];
 
 const ACCOUNT_SERVICES = [

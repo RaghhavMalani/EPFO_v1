@@ -16,7 +16,7 @@ const employerNavigation = [
   { href: "/employer", label: "Overview" },
   { href: "/employer#members", label: "Members" },
   { href: "/employer#establishment", label: "Establishment", mobileHidden: true },
-  { href: "/employer#payments", label: "Payments", mobileHidden: true },
+  { href: "/employer/ecr", label: "Payments", mobileHidden: true },
   { href: "/employer/requests", label: "Requests" },
   { href: "/employer#reports", label: "Reports", mobileHidden: true },
 ];

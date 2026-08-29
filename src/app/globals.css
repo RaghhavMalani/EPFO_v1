@@ -695,6 +695,122 @@ button { touch-action: manipulation; }
   .login-card__actions { flex-direction: column; }
 }
 
+/* Advance / transfer: goal picker and sequence progress map */
+.goal-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-top: 16px; }
+.goal-card { display: grid; gap: 6px; border: 1px solid var(--line-strong); border-radius: 8px; background: var(--surface); padding: 16px; text-align: left; cursor: pointer; }
+.goal-card:hover { border-color: var(--accent); }
+.goal-card:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.goal-card:disabled { cursor: not-allowed; opacity: .7; }
+.goal-card strong { font-size: 14px; }
+.goal-card small { color: var(--muted); font-size: 12px; }
+.goal-card--selected { border-color: var(--accent); border-width: 2px; background: var(--accent-soft); }
+.goal-card--selected strong { color: var(--accent); }
+.advance-submit-form { max-width: 320px; margin-top: 18px; }
+
+.claim-centre-empty { display: flex; flex-wrap: wrap; align-items: center; gap: 16px; padding: 20px 22px; }
+.claim-centre-empty > div { flex: 1; min-width: 220px; }
+.claim-centre-active { display: flex; align-items: center; gap: 24px; padding: 22px; }
+.claim-centre-active__amount, .claim-centre-active__step { flex: 1; min-width: 0; }
+.claim-centre-active__amount p:last-child { margin-top: 4px; font-size: 24px; font-weight: 680; letter-spacing: -.02em; }
+.claim-centre-active__step strong { display: block; margin-top: 4px; font-size: 15px; }
+.claim-centre-active__step small { display: block; margin-top: 3px; color: var(--muted); font-size: 12px; }
+.claim-centre-active > svg { flex: 0 0 auto; color: var(--accent); }
+
+.claim-ledger { display: grid; list-style: none; margin: 0; padding: 0; overflow: hidden; }
+.claim-ledger__row { display: grid; grid-template-columns: 140px minmax(0, 1fr) auto auto; align-items: center; gap: 16px; min-height: 60px; padding: 13px 18px; }
+.claim-ledger__row + .claim-ledger__row { border-top: 1px solid var(--line); }
+.claim-ledger__body strong { display: block; font-size: 13px; }
+.claim-ledger__body small { display: block; margin-top: 3px; color: var(--muted); font-size: 12px; }
+.claim-ledger__amount { font-weight: 650; }
+.claim-type-tag { color: var(--muted); font-size: 12px; font-weight: 650; }
+
+@media (max-width: 720px) {
+  .claim-centre-active { flex-wrap: wrap; }
+  .claim-ledger__row { grid-template-columns: 1fr 1fr; gap: 8px 14px; }
+  .claim-ledger__amount, .ledger-status { grid-column: 2; justify-self: end; }
+}
+
+/* Employer ECR filing */
+.issue-inspector { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; margin-top: 16px; }
+.issue-inspector__item { display: grid; gap: 6px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); padding: 14px; text-align: center; }
+.issue-inspector__item strong { font-size: 22px; font-weight: 680; color: var(--muted); }
+.issue-inspector__item span { color: var(--muted); font-size: 11px; line-height: 1.4; }
+.issue-inspector__item--active { border-color: var(--danger); background: var(--danger-soft); }
+.issue-inspector__item--active strong { color: var(--danger); }
+.issue-inspector__item--active span { color: var(--ink); }
+
+.ecr-table { display: grid; overflow: hidden; }
+.ecr-row { padding: 16px 20px; }
+.ecr-row + .ecr-row { border-top: 1px solid var(--line); }
+.ecr-row--issue { background: #fffdf9; box-shadow: inset 3px 0 var(--warning); }
+.ecr-row__summary { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr) auto; align-items: center; gap: 16px; }
+.ecr-row__identity strong { display: block; font-size: 14px; }
+.ecr-row__identity small { display: block; margin-top: 3px; color: var(--muted); font-size: 12px; }
+.ecr-row__badge { display: inline-flex; align-items: center; gap: 4px; margin-left: 8px; color: var(--accent); font-size: 11px; font-weight: 650; }
+.ecr-row__figures { display: grid; gap: 3px; color: var(--muted); font-size: 12px; text-align: right; }
+.ecr-row__status { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 650; white-space: nowrap; }
+.ecr-row__status--ready { color: var(--success); }
+.ecr-row__status--issue { color: var(--warning); }
+.ecr-row__status--excluded { color: var(--muted); }
+.ecr-row__issues { display: grid; gap: 4px; margin: 12px 0 0; padding-left: 18px; color: var(--muted); font-size: 12px; line-height: 1.5; }
+.ecr-row__issues strong { color: var(--ink); }
+
+.ecr-row-form { margin-top: 14px; padding-top: 14px; border-top: 1px dashed var(--line-strong); }
+.ecr-row-form__hint { margin-bottom: 10px; color: var(--muted); font-size: 12px; line-height: 1.5; }
+.ecr-row-form__fields { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 12px; }
+.ecr-row-form__fields label { display: grid; gap: 5px; }
+.ecr-row-form__fields span { color: var(--muted); font-size: 11px; font-weight: 650; }
+.ecr-row-form__fields input { min-height: 38px; border: 1px solid var(--line-strong); border-radius: 6px; background: var(--surface); padding: 0 10px; color: var(--ink); font: inherit; font-size: 13px; }
+.ecr-row-form__fields input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.ecr-row-form__error { margin-bottom: 10px; color: var(--danger); font-size: 12px; font-weight: 600; }
+
+.ecr-actions { padding: 20px 22px; }
+.ecr-actions__row { display: flex; flex-wrap: wrap; gap: 12px; }
+.ecr-payoff { display: flex; gap: 14px; align-items: flex-start; }
+
+@media (max-width: 900px) {
+  .issue-inspector { grid-template-columns: repeat(3, 1fr); }
+}
+
+@media (max-width: 720px) {
+  .issue-inspector { grid-template-columns: 1fr 1fr; }
+  .ecr-row__summary { grid-template-columns: 1fr; gap: 8px; }
+  .ecr-row__figures { text-align: left; flex-direction: row; display: flex; gap: 14px; }
+  .ecr-row-form__fields { grid-template-columns: 1fr; }
+}
+
+.transfer-consolidation { display: flex; align-items: center; gap: 20px; padding: 22px; }
+.transfer-consolidation__node { flex: 1; min-width: 0; }
+.transfer-consolidation__node strong { display: block; margin-top: 4px; font-size: 16px; font-weight: 680; }
+.transfer-consolidation__node span { display: block; margin-top: 4px; color: var(--muted); font-size: 12px; }
+.transfer-consolidation__node--target strong { color: var(--accent); }
+.transfer-consolidation__arrow { flex: 0 0 auto; color: var(--accent); }
+
+.sequence-map { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; list-style: none; margin: 0; padding: 26px 0 24px; }
+.sequence-node { position: relative; display: grid; justify-items: center; gap: 9px; padding-top: 2px; }
+.sequence-node::before { position: absolute; top: 12px; left: -50%; width: 100%; height: 2px; background: var(--line-strong); content: ""; }
+.sequence-node:first-child::before { display: none; }
+.sequence-node--done::before, .sequence-node--current::before { background: var(--accent); }
+.sequence-node__marker { display: grid; width: 26px; height: 26px; place-items: center; border-radius: 50%; border: 1px solid var(--line-strong); background: var(--surface); color: var(--muted); font-size: 11px; font-weight: 700; }
+.sequence-node--done .sequence-node__marker { border-color: var(--success); background: var(--success); color: white; }
+.sequence-node--current .sequence-node__marker { border-color: var(--accent); background: var(--accent); color: white; }
+.sequence-node__label { color: var(--muted); font-size: 12px; font-weight: 600; text-align: center; }
+.sequence-node--current .sequence-node__label { color: var(--accent); font-weight: 680; }
+.sequence-node--done .sequence-node__label { color: var(--ink); }
+
+@media (max-width: 720px) {
+  .goal-grid { grid-template-columns: 1fr 1fr; }
+  .sequence-map { grid-auto-flow: row; grid-template-columns: repeat(4, 1fr); gap: 16px 0; }
+  .sequence-node::before { display: none; }
+  .transfer-consolidation { flex-direction: column; align-items: stretch; text-align: center; }
+  .transfer-consolidation__arrow { transform: rotate(90deg); justify-self: center; }
+}
+
+@media (max-width: 380px) {
+  .goal-grid { grid-template-columns: 1fr; }
+  .sequence-node__label { display: none; }
+}
+
 /* State-change motion: readiness, claim/transfer progression, ECR validation, employer
    approval, and contribution posting. 260ms opacity/transform only; reduced-motion is
    handled by the global rule below, which forces near-zero animation duration. */
