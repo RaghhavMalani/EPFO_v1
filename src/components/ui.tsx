@@ -48,11 +48,21 @@ export function StatusBadge({ status }: { status: IssueStatus | EmployerRequestS
   return <span className={`status-badge ${tone}`}><Icon size={14} weight="fill" aria-hidden="true" />{label}</span>;
 }
 
-export function PrototypeNotice({ compact = false }: { compact?: boolean }) {
+export function PrototypeNotice({
+  compact = false,
+  title = "Independent prototype · Synthetic data only",
+  children,
+}: {
+  compact?: boolean;
+  title?: string;
+  children?: ReactNode;
+}) {
   return (
     <aside className={`prototype-notice ${compact ? "prototype-notice--compact" : ""}`}>
-      <p className="font-semibold text-[var(--ink)]">Independent prototype · Synthetic data only</p>
-      <p className="mt-1 text-sm leading-6 text-[var(--muted)]">Use only the synthetic persona shown. Never enter a real UAN, Aadhaar, PAN, bank account, OTP, or government credential.</p>
+      <p className="font-semibold text-[var(--ink)]">{title}</p>
+      <p className="mt-1 text-sm leading-6 text-[var(--muted)]">
+        {children ?? "Use only the synthetic persona shown. Never enter a real UAN, Aadhaar, PAN, bank account, OTP, or government credential."}
+      </p>
     </aside>
   );
 }

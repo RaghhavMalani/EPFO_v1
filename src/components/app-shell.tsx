@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { useState } from "react";
 
 const memberNavigation = [
   { href: "/", label: "Home" },
@@ -29,6 +30,29 @@ function isCurrent(pathname: string, href: string) {
 
 export type MemberIdentity = { name: string; uanMasked: string };
 
+function SignOutButton() {
+  const router = useRouter();
+  const [isPending, setIsPending] = useState(false);
+
+  async function signOut() {
+    setIsPending(true);
+    await fetch("/api/auth/logout", { method: "POST" });
+    router.push("/login");
+    router.refresh();
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={signOut}
+      disabled={isPending}
+      className="role-switch role-switch--button"
+    >
+      {isPending ? "Signing out…" : "Sign out"}
+    </button>
+  );
+}
+
 export function AppHeader({ member }: { member: MemberIdentity }) {
   const pathname = usePathname();
   const isEmployer = pathname.startsWith("/employer");
@@ -50,12 +74,12 @@ export function AppHeader({ member }: { member: MemberIdentity }) {
               {isEmployer ? (
                 <>
                   <div><strong>Demo Systems Pvt Ltd</strong><span>Establishment ID · DLCPM••••6789</span></div>
-                  <Link href="/" className="role-switch">Switch to member</Link>
+                  <SignOutButton />
                 </>
               ) : (
                 <>
                   <div><strong>{member.name}</strong><span>UAN · {member.uanMasked}</span></div>
-                  <Link href="/employer" className="role-switch">Employer role</Link>
+                  <SignOutButton />
                 </>
               )}
             </div>
@@ -85,6 +109,7 @@ export function AppFooter() {
       <div className="shell-width app-footer__inner">
         <p><strong>EPFO ONE</strong> · Independent prototype</p>
         <p>Synthetic data only · No government, bank, Aadhaar, PAN, employer, or OTP systems are connected.</p>
+        <Link href="/demo" className="app-footer__demo-link">Demo controls</Link>
       </div>
     </footer>
   );
