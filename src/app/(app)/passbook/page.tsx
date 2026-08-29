@@ -381,7 +381,7 @@ export default async function PassbookPage({
               </tbody>
             </table>
           )}
-          <p className="ledger-note">All amounts are in rupees, derived from the deterministic contribution health engine on synthetic data.</p>
+          <p className="ledger-note">All amounts are in rupees. Every month is checked against what your recorded wages should have produced.</p>
         </div>
 
         {selected ? <ExplanationPanel month={selected} /> : null}

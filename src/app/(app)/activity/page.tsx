@@ -22,7 +22,7 @@ export default function ActivityPage() {
       <PageHeader
         eyebrow="Account"
         title="Activity"
-        description="Every deterministic event across your record — what happened, who acted, and when."
+        description="Every event across your record — what happened, who acted, and when."
         backHref="/"
         backLabel="Home"
       />

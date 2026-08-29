@@ -10,14 +10,22 @@ export function runPreflight(member: Member): PreflightCheck[] {
   const legacyRecordsAligned = member.employments.every(
     (record) => record.legacyRecordStatus === "ALIGNED",
   );
+  // Name the establishment that actually owns each blocker rather than a constant, so
+  // the copy stays correct if the scenario ever grows a second unclosed record.
+  const exitBlockerEmployer = member.employments.find(
+    (record) => !record.isCurrent && !(record.exitStatus === "VERIFIED" && record.pfRecordExitDate),
+  )?.employerName;
+  const legacyBlockerEmployer = member.employments.find(
+    (record) => record.legacyRecordStatus !== "ALIGNED",
+  )?.employerName;
 
   return [
     {
       id: "IDENTITY_VERIFIED",
       label: "Identity verified",
       status: member.identity.identityStatus === "VERIFIED" ? "PASS" : "BLOCK",
-      reason: "The synthetic member identity is verified.",
-      userExplanation: "Your core identity details match this synthetic UAN profile.",
+      reason: "Name, date of birth, and UAN profile all match.",
+      userExplanation: "Your core identity details match the profile held against your UAN.",
       responsibleParty: "EPFO One checks",
       recommendedAction: "No action needed.",
     },
@@ -25,8 +33,8 @@ export function runPreflight(member: Member): PreflightCheck[] {
       id: "AADHAAR_LINKED",
       label: "Aadhaar linked",
       status: member.identity.aadhaarStatus === "VERIFIED" ? "PASS" : "BLOCK",
-      reason: "The masked synthetic Aadhaar status is verified.",
-      userExplanation: "Your synthetic UAN is linked to a verified identity record.",
+      reason: "Aadhaar is seeded and validated against the UAN.",
+      userExplanation: "Your UAN is linked to a verified Aadhaar record.",
       responsibleParty: "EPFO One checks",
       recommendedAction: "No action needed.",
     },
@@ -34,8 +42,8 @@ export function runPreflight(member: Member): PreflightCheck[] {
       id: "PAN_VERIFIED",
       label: "PAN verified",
       status: member.identity.panStatus === "VERIFIED" ? "PASS" : "BLOCK",
-      reason: "The synthetic PAN status is verified.",
-      userExplanation: "Your tax identity check is complete for this prototype.",
+      reason: "PAN is seeded against the member record.",
+      userExplanation: "Your PAN is on file, so tax deduction will be applied at the correct rate.",
       responsibleParty: "EPFO One checks",
       recommendedAction: "No action needed.",
     },
@@ -43,8 +51,8 @@ export function runPreflight(member: Member): PreflightCheck[] {
       id: "MOBILE_VERIFIED",
       label: "Mobile verified",
       status: member.identity.mobileStatus === "VERIFIED" ? "PASS" : "BLOCK",
-      reason: "The masked synthetic mobile status is verified.",
-      userExplanation: "A verified synthetic mobile is available for member self-service checks.",
+      reason: "A verified mobile number is on the member record.",
+      userExplanation: "A verified mobile number is on file, so you can authorise changes yourself.",
       responsibleParty: "EPFO One checks",
       recommendedAction: "No action needed.",
     },
@@ -52,7 +60,7 @@ export function runPreflight(member: Member): PreflightCheck[] {
       id: "BANK_VERIFIED",
       label: "Bank verified",
       status: member.identity.bankStatus === "VERIFIED" ? "PASS" : "BLOCK",
-      reason: "Bank and NPCI verification is complete in the synthetic record.",
+      reason: "Bank account and NPCI verification are both complete.",
       userExplanation: "The payment destination is ready without an employer approval step.",
       responsibleParty: "Bank / NPCI verification · Simulation",
       recommendedAction: "No action needed.",
@@ -63,11 +71,11 @@ export function runPreflight(member: Member): PreflightCheck[] {
       status: exitRecorded ? "PASS" : "BLOCK",
       reason: exitRecorded
         ? "Every previous employment record has a Date of Exit."
-        : "Demo Systems Pvt Ltd has no Date of Exit in the synthetic PF record.",
+        : `${exitBlockerEmployer ?? "Your last employer"} has not recorded a Date of Exit against this PF record.`,
       userExplanation: exitRecorded
         ? "Your last employment record is formally closed."
-        : "You left more than 60 days ago and can now mark this date yourself in the synthetic flow.",
-      responsibleParty: exitRecorded ? "EPFO One checks" : "Aarav Sharma",
+        : "You left more than 60 days ago, so you can now record this date yourself.",
+      responsibleParty: exitRecorded ? "EPFO One checks" : member.name,
       recommendedAction: exitRecorded ? "No action needed." : "Use Manage to mark your Date of Exit.",
       ...(exitRecorded ? {} : { issueId: EXIT_ISSUE_ID }),
     },
@@ -76,17 +84,17 @@ export function runPreflight(member: Member): PreflightCheck[] {
       label: "Legacy employment record aligned",
       status: legacyRecordsAligned ? "PASS" : "BLOCK",
       reason: legacyRecordsAligned
-        ? "Every synthetic member record is aligned under this UAN."
-        : "A legacy service-end detail needs employer review in this demo scenario.",
+        ? "Every member record under this UAN is aligned."
+        : "A service-end detail on an older record does not match and needs employer review.",
       userExplanation: legacyRecordsAligned
         ? "Your employment records are ready for final settlement."
-        : "This exception cannot be self-approved. Demo Systems must review the proposed correction.",
+        : `This one cannot be fixed from your side. ${legacyBlockerEmployer ?? "Your employer"} has to review the correction.`,
       responsibleParty: legacyRecordsAligned
         ? "EPFO One checks"
-        : "Demo Systems Pvt Ltd",
+        : (legacyBlockerEmployer ?? "Your employer"),
       recommendedAction: legacyRecordsAligned
         ? "No action needed."
-        : "Create a synthetic employer review request.",
+        : "Send the correction to your employer for review.",
       ...(legacyRecordsAligned ? {} : { issueId: LEGACY_ISSUE_ID }),
     },
   ];

@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { Suspense } from "react";
 import { LanguageToggle } from "@/components/language-toggle";
 import { LoginCard } from "@/components/login-card";
+import { EMPLOYER_IDENTITY, MEMBER_IDENTITY } from "@/fixtures/demo-identities";
 import { T } from "@/lib/i18n/t";
 
 export const metadata: Metadata = { title: "Sign in" };
@@ -25,16 +26,16 @@ export default function LoginPage() {
           <div className="login-grid">
             <LoginCard
               role="member"
-              name="Aarav Sharma"
-              idLabel="UAN"
-              idValue="100200304821"
+              name={MEMBER_IDENTITY.name}
+              idLabel={MEMBER_IDENTITY.signInLabel}
+              idValue={MEMBER_IDENTITY.signInId}
               icon={<IdentificationCardIcon size={22} weight="fill" aria-hidden="true" />}
             />
             <LoginCard
               role="employer"
-              name="Demo Systems Pvt Ltd"
-              idLabel="Establishment ID"
-              idValue="DL-DEM-2712"
+              name={EMPLOYER_IDENTITY.name}
+              idLabel={EMPLOYER_IDENTITY.signInLabel}
+              idValue={EMPLOYER_IDENTITY.signInId}
               icon={<BuildingsIcon size={22} weight="fill" aria-hidden="true" />}
             />
           </div>

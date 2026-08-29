@@ -18,7 +18,7 @@ export default function WithdrawPage() {
           <dl className="claim-start__facts">
             <div><dt>Claim type</dt><dd>Form 19</dd></div>
             <div><dt>Employment status</dt><dd>Not currently PF-covered</dd></div>
-            <div><dt>Checks required</dt><dd>Seven deterministic checks</dd></div>
+            <div><dt>Checks required</dt><dd>Seven checks</dd></div>
           </dl>
           <div className="claim-start__action"><ActionButton endpoint="/api/actions/preflight" body={{}} successHref="/withdraw/preflight" showArrow>Run seven readiness checks</ActionButton><p>{withdrawalService.explanation} AI does not decide eligibility or amounts.</p></div>
         </section>

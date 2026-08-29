@@ -48,6 +48,15 @@ export function StatusBadge({ status }: { status: IssueStatus | EmployerRequestS
   return <span className={`status-badge ${tone}`}><Icon size={14} weight="fill" aria-hidden="true" />{label}</span>;
 }
 
+/**
+ * Marks a control whose effect is simulated inside the prototype rather than
+ * produced by a real EPFO or bank system. The surrounding copy stays written for
+ * a citizen; this badge carries the disclosure so every label does not have to.
+ */
+export function DemoBadge({ label = "Demo" }: { label?: string }) {
+  return <span className="demo-badge">{label}</span>;
+}
+
 export function PrototypeNotice({
   compact = false,
   title = "Independent prototype · Synthetic data only",

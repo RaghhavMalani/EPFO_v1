@@ -51,7 +51,7 @@ export default function ReviewPage() {
           <div className="flex gap-3">
             <ShieldCheckIcon size={24} className="shrink-0 text-[var(--accent)]" aria-hidden="true" />
             <div>
-              <p className="font-semibold">Deterministic readiness</p>
+              <p className="font-semibold">Readiness</p>
               <p className="mt-1 text-sm leading-6 text-[var(--muted)]">
                 All seven preflight checks passed. Readiness is {snapshot.readiness.percentage}%.
               </p>

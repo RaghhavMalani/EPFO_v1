@@ -1,7 +1,7 @@
 import { CheckIcon, WarningCircleIcon } from "@phosphor-icons/react/dist/ssr";
 import { epfoService, experienceV2Service } from "@/application/service-instance";
 import { AdvanceSubmitForm, GOAL_LABELS, GoalPicker, SimulateProcessingButton } from "@/components/advance-form";
-import { LinkButton, PageHeader, PrototypeNotice } from "@/components/ui";
+import { DemoBadge, LinkButton, PageHeader, PrototypeNotice } from "@/components/ui";
 import { ADVANCE_SEQUENCE } from "@/domain/advance-machine";
 import type { AdvanceState } from "@/domain/experience-v2";
 import { StateSequenceMap } from "@/components/state-sequence-map";
@@ -31,7 +31,7 @@ export default function AdvancePage() {
       <PageHeader
         eyebrow="Online Services · Form 31"
         title="PF advance"
-        description="A partial, goal-based withdrawal against your PF balance. Eligibility and the maximum amount are calculated deterministically from your synthetic record."
+        description="A partial withdrawal against your PF balance for one specific purpose. Your eligibility and your maximum amount are both worked out from your own record."
         backHref="/online-services"
         backLabel="Online Services"
         aside={<span className="rounded-xl bg-[var(--accent-soft)] px-3 py-2 text-sm font-semibold text-[var(--accent)]">{humanizeState(advance.state)}</span>}
@@ -52,7 +52,7 @@ export default function AdvancePage() {
       {isPreSubmission ? (
         <section className="py-8">
           <h2 className="section-title">Choose a purpose</h2>
-          <p className="mt-2 text-sm leading-6 text-[var(--muted)]">Each purpose applies its own synthetic minimum service period and wage-multiple ceiling.</p>
+          <p className="mt-2 text-sm leading-6 text-[var(--muted)]">Each purpose has its own minimum service period and its own ceiling on how much you can take.</p>
           <GoalPicker goal={advance.goal} />
         </section>
       ) : (
@@ -69,7 +69,7 @@ export default function AdvancePage() {
 
       <section className="preflight-columns">
         <div className="check-list">
-          <h2>Deterministic eligibility calculation</h2>
+          <h2>Eligibility</h2>
           <ul>
             {advance.checks.map((check) => (
               <li key={check.id} className={check.status === "PASS" ? "check-line check-line--done" : "check-line check-line--open"}>
@@ -96,7 +96,7 @@ export default function AdvancePage() {
           ) : advance.state === "READY" ? (
             <div className="panel p-6">
               <h2 className="section-title">Review and submit</h2>
-              <p className="mt-2 text-sm leading-6 text-[var(--muted)]">{advance.recommendedNextAction} The amount is capped at the deterministic maximum shown above.</p>
+              <p className="mt-2 text-sm leading-6 text-[var(--muted)]">{advance.recommendedNextAction} The amount is capped at the maximum shown above.</p>
               <AdvanceSubmitForm advance={advance} />
             </div>
           ) : advance.state === "SUBMITTED" || advance.state === "EPFO_PROCESSING" ? (
@@ -104,18 +104,19 @@ export default function AdvancePage() {
               <h2 className="section-title">{advance.state === "SUBMITTED" ? "Submitted for EPFO processing" : "EPFO is processing this advance"}</h2>
               <p className="mt-2 text-sm leading-6 text-[var(--muted)]">
                 {advance.state === "SUBMITTED"
-                  ? "This synthetic request is queued. In this prototype, processing steps are simulated on demand."
-                  : "The synthetic bank credit step is next."}
+                  ? "Your request is queued with EPFO. Nothing further is needed from you."
+                  : "The credit to your bank account is the last step."}
               </p>
-              <div className="mt-5">
-                <SimulateProcessingButton label={advance.state === "SUBMITTED" ? "Simulate EPFO processing (demo)" : "Simulate bank credit (demo)"} />
+              <div className="mt-5 flex flex-wrap items-center gap-3">
+                <SimulateProcessingButton label={advance.state === "SUBMITTED" ? "Advance to EPFO processing" : "Advance to bank credit"} />
+                <DemoBadge />
               </div>
             </div>
           ) : (
             <div className="panel p-6">
               <CheckIcon size={24} weight="bold" className="text-[var(--success)]" aria-hidden="true" />
               <h2 className="section-title mt-3">Advance credited</h2>
-              <p className="mt-2 text-sm leading-6 text-[var(--muted)]">{formatCurrency(advance.requestedAmountPaise)} was credited to the masked bank account and posted to your PF balance.</p>
+              <p className="mt-2 text-sm leading-6 text-[var(--muted)]">{formatCurrency(advance.requestedAmountPaise)} was credited to your bank account and posted against your PF balance.</p>
               <div className="mt-5 flex flex-wrap gap-3">
                 <LinkButton href="/claims">View claim centre</LinkButton>
                 <LinkButton href="/passbook" variant="secondary">Open passbook</LinkButton>

@@ -110,21 +110,21 @@ export function validateEcrRows(
 
     const uan = row.uanMasked.trim();
     if (!uan) {
-      addIssue("MISSING_UAN", "uanMasked", "A masked synthetic UAN is required.");
+      addIssue("MISSING_UAN", "uanMasked", "A UAN is required on every payroll row.");
     } else if (seenUans.has(uan)) {
-      addIssue("DUPLICATE_EMPLOYEE", "uanMasked", "This synthetic employee already appears earlier in the payroll file.");
+      addIssue("DUPLICATE_EMPLOYEE", "uanMasked", "This employee already appears earlier in the file.");
     } else {
       seenUans.add(uan);
     }
 
     if (row.memberId && !isLinkedMember(row.memberId)) {
-      addIssue("EMPLOYMENT_RECORD_MISMATCH", "memberId", "The synthetic member is not linked to an active employment record.");
+      addIssue("EMPLOYMENT_RECORD_MISMATCH", "memberId", "This member is not linked to an active employment record.");
     }
 
     if (row.wagePaise > 0) {
       const expected = expectedContributionFromWage(row.wagePaise);
       if (row.employeeContributionPaise !== expected.employeePaise) {
-        addIssue("UNEXPECTED_CONTRIBUTION", "employeeContributionPaise", "Employee contribution must equal 12% of the synthetic wage.", expected.employeePaise);
+        addIssue("UNEXPECTED_CONTRIBUTION", "employeeContributionPaise", "Employee contribution must equal 12% of the wage basis.", expected.employeePaise);
       }
       if (row.employerContributionPaise !== expected.employerPaise) {
         addIssue("UNEXPECTED_CONTRIBUTION", "employerContributionPaise", "Employer EPF contribution must match the employee contribution.", expected.employerPaise);

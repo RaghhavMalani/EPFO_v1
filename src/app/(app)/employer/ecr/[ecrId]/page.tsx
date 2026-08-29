@@ -68,7 +68,7 @@ export default async function EcrFilingPage({
       <PageHeader
         eyebrow={`Payroll · ${formatMonth(ecr.month)}`}
         title={ecr.filename}
-        description="Deterministic payroll validation, row-level correction, challan generation, and payment — one filing at a time."
+        description="Validate the return, correct the rows that fail, generate the challan, and pay — one filing at a time."
         backHref="/employer"
         backLabel="Employer overview"
         aside={<span className={`status-badge ${STATE_TONE[ecr.state]}`}><FileTextIcon size={14} weight="fill" aria-hidden="true" />{humanizeState(ecr.state)}</span>}
@@ -91,7 +91,7 @@ export default async function EcrFilingPage({
 
       <section className="py-8" aria-label="Issue inspector">
         <h2 className="section-title">Issue inspector</h2>
-        <p className="mt-2 text-sm leading-6 text-[var(--muted)]">Every row issue falls into one of five deterministic codes.</p>
+        <p className="mt-2 text-sm leading-6 text-[var(--muted)]">Every row issue falls into one of five error codes.</p>
         <div className="issue-inspector">
           {ISSUE_CODES.map((code) => (
             <div key={code} className={issueCounts[code] > 0 ? "issue-inspector__item issue-inspector__item--active" : "issue-inspector__item"}>

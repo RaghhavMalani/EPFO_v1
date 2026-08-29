@@ -78,7 +78,7 @@ export function evaluateAdvancePolicy({
       label: "Aadhaar linked",
       status: aadhaarPasses ? "PASS" : "BLOCK",
       explanation: aadhaarPasses
-        ? "Aadhaar is linked to the synthetic UAN."
+        ? "Aadhaar is linked to your UAN."
         : "Link Aadhaar before continuing.",
     },
     {
@@ -102,7 +102,7 @@ export function evaluateAdvancePolicy({
       label: "PF balance available",
       status: hasBalance ? "PASS" : "BLOCK",
       explanation: hasBalance
-        ? "A synthetic PF balance is available to draw against."
+        ? "You have a PF balance available to draw against."
         : "No PF balance is available to draw against.",
     },
     {
@@ -111,14 +111,14 @@ export function evaluateAdvancePolicy({
       status: servicePasses ? "PASS" : "BLOCK",
       explanation:
         requiredMonths === 0
-          ? "No minimum service period applies to this synthetic medical rule."
+          ? "No minimum service period applies to a medical advance."
           : `${requiredMonths} months are required; ${serviceMonths} are available.`,
     },
     {
       id: "ADVANCE_RULE",
       label: `${GOAL_LABELS[goal]} rule`,
       status: "PASS",
-      explanation: "The selected purpose is supported by the synthetic policy engine.",
+      explanation: "This purpose is covered by Form 31.",
     },
   ];
 

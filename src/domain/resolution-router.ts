@@ -26,16 +26,16 @@ export function routeResolution(issue: Issue, member: Member): ResolutionRoute {
           issueId: issue.id,
           resolutionType: "SELF_SERVICE",
           explanation:
-            "The waiting period has passed and the synthetic UAN has verified Aadhaar and mobile status, so the member can use Mark Exit.",
+            "The waiting period has passed and this UAN has verified Aadhaar and mobile details, so the member can record the exit themselves.",
           responsibleParty: member.name,
-          requiredAction: "Review and confirm the synthetic Date of Exit in Manage.",
+          requiredAction: "Review and confirm the Date of Exit in Manage.",
           nextState: "ACTION_REQUIRED",
         }
       : {
           issueId: issue.id,
           resolutionType: "EMPLOYER_ACTION",
           explanation:
-            "The member does not meet the synthetic self-service conditions, so the previous employer must review the record.",
+            "The member does not meet the self-service conditions, so the previous employer has to review the record.",
           responsibleParty: "Demo Systems Pvt Ltd",
           requiredAction: "Create an employer review request.",
           nextState: "WAITING_EXTERNAL",
@@ -47,9 +47,9 @@ export function routeResolution(issue: Issue, member: Member): ResolutionRoute {
       issueId: issue.id,
       resolutionType: "EMPLOYER_ACTION",
       explanation:
-        "This synthetic legacy service classification is outside the member self-service route and needs employer evidence review.",
+        "A legacy service classification cannot be corrected by the member and needs the employer to review the evidence.",
       responsibleParty: "Demo Systems Pvt Ltd",
-      requiredAction: "Create a request for the demo employer to review.",
+      requiredAction: "Send the correction to the employer for review.",
       nextState: "WAITING_EXTERNAL",
     };
   }
@@ -59,9 +59,9 @@ export function routeResolution(issue: Issue, member: Member): ResolutionRoute {
       issueId: issue.id,
       resolutionType: "SELF_SERVICE",
       explanation:
-        "The member can provide bank details for simulated Bank / NPCI verification. Employer approval is not part of this route.",
+        "The member can supply bank details for Bank / NPCI verification. No employer approval is needed on this route.",
       responsibleParty: "Member and Bank / NPCI · Simulation",
-      requiredAction: "Submit synthetic bank details for automatic verification.",
+      requiredAction: "Submit bank details for automatic verification.",
       nextState: "ACTION_REQUIRED",
     };
   }
@@ -71,7 +71,7 @@ export function routeResolution(issue: Issue, member: Member): ResolutionRoute {
       issueId: issue.id,
       resolutionType: "SELF_SERVICE",
       explanation:
-        "The synthetic Aadhaar-validated UAN qualifies for member self-service profile correction.",
+        "An Aadhaar-validated UAN qualifies for member self-service profile correction.",
       responsibleParty: member.name,
       requiredAction: "Review and confirm the corrected profile value.",
       nextState: "ACTION_REQUIRED",
@@ -82,7 +82,7 @@ export function routeResolution(issue: Issue, member: Member): ResolutionRoute {
     issueId: issue.id,
     resolutionType: "EMPLOYER_ACTION",
     explanation:
-      "This synthetic profile exception falls outside the self-service policy conditions.",
+      "This profile exception falls outside the self-service conditions.",
     responsibleParty: "Demo Systems Pvt Ltd",
     requiredAction: "Create an employer review request.",
     nextState: "WAITING_EXTERNAL",
