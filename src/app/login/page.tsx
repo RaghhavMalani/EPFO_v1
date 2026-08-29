@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { Suspense } from "react";
 import { LanguageToggle } from "@/components/language-toggle";
 import { LoginCard } from "@/components/login-card";
+import { TourStartCard } from "@/components/tour-start";
 import { EMPLOYER_IDENTITY, MEMBER_IDENTITY } from "@/fixtures/demo-identities";
 import { T } from "@/lib/i18n/t";
 
@@ -21,6 +22,10 @@ export default function LoginPage() {
           <h1><T id="login.brand" /></h1>
           <p><T id="login.subtitle" /></p>
         </header>
+
+        <TourStartCard />
+
+        <p className="login-divider"><span>or sign in as either identity</span></p>
 
         <Suspense fallback={<div className="login-grid" aria-hidden="true" />}>
           <div className="login-grid">

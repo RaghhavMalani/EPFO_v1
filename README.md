@@ -43,13 +43,13 @@ Experience V2 and flagship additions:
 - Hindi/English toggle across navigation and the full member journey's headline and label strings, persisted in `localStorage`
 - `/activity`: a full-page view of the deterministic event timeline
 - A print stylesheet and browser-native "Download statement" on `/passbook`
-- Over 115 deterministic domain and session tests
+- Over 125 deterministic domain, session, and walkthrough tests
 
 ## Routes
 
 Front door:
 
-- `/login` Mock sign-in for the member and employer demo identities
+- `/login` The guided walkthrough entry point, and mock sign-in for the member and employer demo identities
 
 Member routes:
 
@@ -77,6 +77,7 @@ Employer routes:
 Command and read routes:
 
 - `POST /api/auth/login`, `POST /api/auth/logout` Mock sign-in and sign-out
+- `POST /api/tour` Guided walkthrough navigation, including the member/employer role switch
 - `POST /api/actions/preflight`, `POST /api/actions/claim`, `POST /api/actions/issues/[issueId]` Member self-service and claim actions
 - `POST /api/actions/advance` Form 31 goal selection, submission, and processing states
 - `POST /api/actions/transfer` Form 13 blocker resolution and state progression
@@ -169,6 +170,29 @@ To run the Playwright end-to-end happy path (requires a browser install; skips g
 ```bash
 npm run test:e2e
 ```
+
+## Guided walkthrough
+
+`/login` opens with **Experience EPFO One** — a two-minute, six-step walkthrough that
+signs you in, switches you between the member and the employer, and narrates the
+product's actual argument rather than its navigation:
+
+| | Phase | Role | What it proves |
+| --- | --- | --- | --- |
+| 1 | Detect | Member | March is short an employer contribution, found by comparing the month against recorded wages |
+| 2 | Resolve | Employer | The payroll return behind it fails validation; correct the rows, raise the challan, pay |
+| 3 | Verify | Member | That one payment posts the contribution and moves the PF balance — ₹3,20,400 → ₹3,27,120 |
+| 4 | Detect | Member | A different problem: seven readiness checks, two blocking, each with a named owner |
+| 5 | Resolve | Member | Date of Exit is self-service; the legacy record is not — readiness moves 5/7 → 6/7 → 7/7 |
+| 6 | Complete | Member | Submit a claim with nothing left to fail, and follow it to the credit |
+
+The rail's position is **derived from scenario state**, not stored beside it. Doing a
+step early jumps the walkthrough forward to match, and nothing a judge does can make it
+claim more or less progress than the data supports.
+
+Beside it, the **live resolution trace** renders `AppState.auditEvents` with each
+event's consequence — readiness transitions, and the amounts that moved — and marks the
+events where one role's action becomes another's outcome.
 
 ## Environment
 
