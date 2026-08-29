@@ -21,6 +21,22 @@ export const EmploymentRecordSchema = z.object({
   serviceEndReason: z.enum(["RESIGNATION", "RETIREMENT"]).nullable(),
 });
 
+export const NomineeSchema = z.object({
+  id: z.string(),
+  name: z.string().min(1),
+  relationship: z.string().min(1),
+  sharePercentage: z.number().int().min(1).max(100),
+  dateOfBirth: z.string().nullable(),
+});
+
+export const NominationStatusSchema = z.enum(["NOT_STARTED", "SAVED"]);
+
+export const NominationSchema = z.object({
+  status: NominationStatusSchema,
+  nominees: z.array(NomineeSchema),
+  updatedAt: z.string().nullable(),
+});
+
 export const MemberSchema = z.object({
   id: z.string(),
   name: z.string(),
@@ -43,6 +59,7 @@ export const MemberSchema = z.object({
     uanIssuedBeforeProfileCutoff: z.boolean(),
   }),
   employments: z.array(EmploymentRecordSchema).min(1),
+  nomination: NominationSchema,
 });
 
 export const PreflightCheckIdSchema = z.enum([
@@ -205,6 +222,7 @@ export const AuditEventSchema = z.object({
     "ADVANCE",
     "TRANSFER",
     "ECR",
+    "NOMINATION",
   ]),
   aggregateId: z.string(),
   eventType: z.string(),
@@ -225,6 +243,9 @@ export const AppStateSchema = z.object({
 });
 
 export type EmploymentRecord = z.infer<typeof EmploymentRecordSchema>;
+export type Nominee = z.infer<typeof NomineeSchema>;
+export type NominationStatus = z.infer<typeof NominationStatusSchema>;
+export type Nomination = z.infer<typeof NominationSchema>;
 export type Member = z.infer<typeof MemberSchema>;
 export type PreflightCheckId = z.infer<typeof PreflightCheckIdSchema>;
 export type PreflightCheck = z.infer<typeof PreflightCheckSchema>;

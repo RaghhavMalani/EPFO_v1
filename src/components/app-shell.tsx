@@ -1,21 +1,16 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-
-const memberNavigation = [
-  { href: "/", label: "Home" },
-  { href: "/passbook", label: "Passbook" },
-  { href: "/member", label: "Employment", mobileLabel: "Jobs" },
-  { href: "/online-services", label: "Services" },
-  { href: "/manage", label: "Manage" },
-];
+import { usePathname, useRouter } from "next/navigation";
+import { useState } from "react";
+import { LanguageToggle } from "@/components/language-toggle";
+import { T, useTranslation } from "@/lib/i18n/t";
 
 const employerNavigation = [
   { href: "/employer", label: "Overview" },
   { href: "/employer#members", label: "Members" },
   { href: "/employer#establishment", label: "Establishment", mobileHidden: true },
-  { href: "/employer#payments", label: "Payments", mobileHidden: true },
+  { href: "/employer/ecr", label: "Payments", mobileHidden: true },
   { href: "/employer/requests", label: "Requests" },
   { href: "/employer#reports", label: "Reports", mobileHidden: true },
 ];
@@ -29,9 +24,41 @@ function isCurrent(pathname: string, href: string) {
 
 export type MemberIdentity = { name: string; uanMasked: string };
 
+function SignOutButton() {
+  const router = useRouter();
+  const t = useTranslation();
+  const [isPending, setIsPending] = useState(false);
+
+  async function signOut() {
+    setIsPending(true);
+    await fetch("/api/auth/logout", { method: "POST" });
+    router.push("/login");
+    router.refresh();
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={signOut}
+      disabled={isPending}
+      className="role-switch role-switch--button"
+    >
+      {isPending ? "Signing out…" : t("nav.signOut")}
+    </button>
+  );
+}
+
 export function AppHeader({ member }: { member: MemberIdentity }) {
   const pathname = usePathname();
+  const t = useTranslation();
   const isEmployer = pathname.startsWith("/employer");
+  const memberNavigation = [
+    { href: "/", label: t("nav.home") },
+    { href: "/passbook", label: t("nav.passbook") },
+    { href: "/member", label: t("nav.employment"), mobileLabel: t("nav.jobs") },
+    { href: "/online-services", label: t("nav.services") },
+    { href: "/manage", label: t("nav.manage") },
+  ];
   const navigation = isEmployer ? employerNavigation : memberNavigation;
 
   return (
@@ -50,12 +77,13 @@ export function AppHeader({ member }: { member: MemberIdentity }) {
               {isEmployer ? (
                 <>
                   <div><strong>Demo Systems Pvt Ltd</strong><span>Establishment ID · DLCPM••••6789</span></div>
-                  <Link href="/" className="role-switch">Switch to member</Link>
+                  <SignOutButton />
                 </>
               ) : (
                 <>
                   <div><strong>{member.name}</strong><span>UAN · {member.uanMasked}</span></div>
-                  <Link href="/employer" className="role-switch">Employer role</Link>
+                  <LanguageToggle />
+                  <SignOutButton />
                 </>
               )}
             </div>
@@ -85,6 +113,7 @@ export function AppFooter() {
       <div className="shell-width app-footer__inner">
         <p><strong>EPFO ONE</strong> · Independent prototype</p>
         <p>Synthetic data only · No government, bank, Aadhaar, PAN, employer, or OTP systems are connected.</p>
+        <Link href="/demo" className="app-footer__demo-link"><T id="nav.demoControls" /></Link>
       </div>
     </footer>
   );

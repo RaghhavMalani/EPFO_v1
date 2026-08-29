@@ -93,6 +93,11 @@ export function createSyntheticScenario(): AppState {
           serviceEndReason: null,
         },
       ],
+      nomination: {
+        status: "NOT_STARTED",
+        nominees: [],
+        updatedAt: null,
+      },
     },
     employer: {
       id: "employer-demo-systems",

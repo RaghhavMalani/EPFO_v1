@@ -6,6 +6,7 @@ import { MemberSelfServiceAdapter } from "@/adapters/member-self-service-adapter
 import { MockClaimProcessorAdapter } from "@/adapters/mock-claim-processor-adapter";
 import { createAuditEvent, type AuditContext } from "@/domain/audit";
 import { transitionClaim } from "@/domain/claim-machine";
+import type { NomineeInput } from "@/domain/nomination";
 import { hasBlockingChecks, runPreflight } from "@/domain/preflight";
 import { calculateReadiness, type ReadinessResult } from "@/domain/readiness";
 import {
@@ -162,6 +163,16 @@ export class EpfoApplicationService {
     const state = this.claimAdapter.advance(
       this.repository.getState(),
       nextState,
+      this.context,
+    );
+    this.repository.saveState(state);
+    return this.getSnapshot();
+  }
+
+  saveNomination(nominees: NomineeInput[]): ApplicationSnapshot {
+    const state = this.selfServiceAdapter.saveNomination(
+      this.repository.getState(),
+      nominees,
       this.context,
     );
     this.repository.saveState(state);

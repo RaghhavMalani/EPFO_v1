@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
 
 const routes = [
   "/",
@@ -6,11 +6,16 @@ const routes = [
   "/member",
   "/manage",
   "/online-services",
+  "/advance",
+  "/transfer",
+  "/claims",
+  "/pension",
+  "/activity",
   "/withdraw",
   "/withdraw/preflight",
-  "/employer",
-  "/employer/requests",
 ];
+
+const employerRoutes = ["/employer", "/employer/requests", "/employer/ecr"];
 
 const viewports = [
   { width: 1440, height: 900 },
@@ -20,15 +25,69 @@ const viewports = [
   { width: 320, height: 720 },
 ];
 
-test.beforeEach(async ({ request }) => {
-  const response = await request.post("/api/demo", { data: { action: "RESET" } });
+async function loginViaApi(page: Page, role: "member" | "employer") {
+  const response = await page.request.post("/api/auth/login", {
+    data: { role, password: "demo1234" },
+  });
   expect(response.ok()).toBeTruthy();
+}
+
+async function loginViaUi(page: Page, role: "member" | "employer") {
+  await page.goto("/login");
+  const card = page.locator(`form[aria-labelledby="login-card-${role}-name"]`);
+  await card.getByRole("button", { name: "Use demo credentials" }).click();
+  await card.getByRole("button", { name: /Sign in as/ }).click();
+  await page.waitForURL(role === "member" ? "/" : "/employer");
+}
+
+async function signOutViaUi(page: Page) {
+  await page.getByRole("button", { name: "Sign out" }).click();
+  await page.waitForURL("/login");
+}
+
+test.beforeEach(async ({ page }) => {
+  const response = await page.request.post("/api/demo", { data: { action: "RESET" } });
+  expect(response.ok()).toBeTruthy();
+  await loginViaApi(page, "member");
 });
 
-test("required routes have a heading and no page-level horizontal overflow", async ({ page }) => {
+test("the login screen gates every route and accepts only the demo password", async ({ page }) => {
+  // Signed out, a protected route bounces to /login and remembers where to return.
+  await page.request.post("/api/auth/logout");
+  await page.goto("/passbook");
+  await expect(page).toHaveURL(/\/login\?next=%2Fpassbook/);
+
+  const memberCard = page.locator('form[aria-labelledby="login-card-member-name"]');
+  await memberCard.getByLabel("Password").fill("wrong-password");
+  await memberCard.getByRole("button", { name: /Sign in as/ }).click();
+  await expect(page.getByRole("alert")).toContainText("Incorrect password");
+
+  await memberCard.getByRole("button", { name: "Use demo credentials" }).click();
+  await memberCard.getByRole("button", { name: /Sign in as/ }).click();
+  await expect(page).toHaveURL("/passbook");
+
+  // An employer-only route redirects a member back to their own home rather than to /login.
+  await page.goto("/employer");
+  await expect(page).toHaveURL("/");
+});
+
+test("required member routes have a heading and no page-level horizontal overflow", async ({ page }) => {
   for (const viewport of viewports) {
     await page.setViewportSize(viewport);
     for (const route of routes) {
+      await page.goto(route);
+      await expect(page.locator("h1")).toBeVisible();
+      const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
+      expect(overflow, `${route} overflows at ${viewport.width}px`).toBeLessThanOrEqual(1);
+    }
+  }
+});
+
+test("required employer routes have a heading and no page-level horizontal overflow", async ({ page }) => {
+  await loginViaApi(page, "employer");
+  for (const viewport of viewports) {
+    await page.setViewportSize(viewport);
+    for (const route of employerRoutes) {
       await page.goto(route);
       await expect(page.locator("h1")).toBeVisible();
       const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
@@ -82,6 +141,9 @@ test("passbook renders the ledger, the March anomaly, and the May reconciliation
   await expect(panel.getByText("Expected employer EPF", { exact: true })).toBeVisible();
   await expect(panel.getByText("₹2,160", { exact: true }).first()).toBeVisible();
 
+  // The statutory 12 / 3.67 / 8.33 split explainer sits alongside the health detail.
+  await expect(panel.getByRole("heading", { name: "Where does my money go?" })).toBeVisible();
+
   await page.getByRole("link", { name: "Understand this contribution" }).nth(1).click();
   await expect(page).toHaveURL(/month=2026-05/);
   await expect(panel.getByRole("heading", { name: "May 2026" })).toBeVisible();
@@ -100,7 +162,9 @@ test("passbook filters narrow the ledger through the URL", async ({ page }) => {
   await expect(page.getByRole("rowheader", { name: "Jun 2026" })).toBeVisible();
 });
 
-test("member resolves both blockers, employer approves, and the claim is submitted", async ({ page }) => {
+test("member logs in, resolves both blockers, employer approves, and the claim is submitted", async ({ page }) => {
+  // beforeEach already authenticated as member via the API; this flow's own login/logout
+  // steps below exercise the actual UI when switching personas mid-journey.
   await page.goto("/withdraw/preflight");
   await expect(page.getByRole("heading", { name: "Final settlement readiness" })).toBeVisible();
   await expect(page.locator(".check-line")).toHaveCount(7);
@@ -119,12 +183,21 @@ test("member resolves both blockers, employer approves, and the claim is submitt
 
   await page.locator(".action-item").getByRole("link", { name: "Resolve this check" }).click();
   await page.getByRole("button", { name: "Send synthetic request" }).click();
-  await page.getByRole("link", { name: "View shared request" }).click();
+  const requestUrl = page.url();
+
+  // Switch personas the way the two-portal demo intends: sign out of member, into employer.
+  await signOutViaUi(page);
+  await loginViaUi(page, "employer");
+  await page.goto(requestUrl);
   await expect(page.getByText("Current and proposed details")).toBeVisible();
   await page.getByRole("button", { name: "Start review" }).click();
   await expect(page.getByRole("button", { name: "Approve change" })).toBeVisible();
   await page.getByRole("button", { name: "Approve change" }).click();
   await expect(page.getByText("Approved and applied")).toBeVisible();
+
+  // Back to the member to see readiness react to the employer's decision and submit.
+  await signOutViaUi(page);
+  await loginViaUi(page, "member");
 
   await page.goto("/withdraw/preflight");
   await expect(page.getByText("7 of 7 checks complete").first()).toBeVisible();
@@ -133,4 +206,16 @@ test("member resolves both blockers, employer approves, and the claim is submitt
   await page.getByRole("button", { name: "Confirm and submit synthetic claim" }).click();
   await expect(page.getByRole("heading", { name: /final PF settlement/ })).toBeVisible();
   await expect(page.getByText("Submitted", { exact: true }).first()).toBeVisible();
+});
+
+test("employer corrects an ECR row and payment posts the shared member's contribution", async ({ page }) => {
+  await loginViaApi(page, "employer");
+  await page.goto("/employer/ecr");
+  await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+  await expect(page.getByText("Validation Failed")).toBeVisible();
+
+  // Correcting Aarav Sharma's mismatched employment record relinks the row with no input needed.
+  const aaravRow = page.locator(".ecr-row", { hasText: "Aarav Sharma" });
+  await aaravRow.getByRole("button", { name: "Save correction" }).click();
+  await expect(page.locator(".ecr-row", { hasText: "Aarav Sharma" })).toHaveCount(0);
 });
